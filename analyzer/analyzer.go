@@ -12,7 +12,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "gostrconv",
-	Doc:      "Checks that Sprintf can be replaced with a faster strconv.",
+	Doc:      "Checks that Sprintf can be replaced with a faster strconv function.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
