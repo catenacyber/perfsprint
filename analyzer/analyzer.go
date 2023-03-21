@@ -1,8 +1,8 @@
 package analyzer
 
 import (
+	"fmt"
 	"go/ast"
-	"strings"
 
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
