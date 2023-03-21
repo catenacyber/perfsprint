@@ -18,7 +18,7 @@ func changeCall(call *ast.CallExpr) {
 	name := call.Fun.(*ast.SelectorExpr)
 	pname := name.X.(*ast.Ident)
 	pname.Name = "strconv"
-	name.Sel.Name = "Itoa"
+	name.Sel.Name = "FormatInt"
 	call.Args = call.Args[1:2]
 	tocast := true
 	switch a := call.Args[0].(type) {
@@ -27,11 +27,18 @@ func changeCall(call *ast.CallExpr) {
 			fn, ok := a.Fun.(*ast.Ident)
 			if ok {
 				switch fn.Name {
-				case "int":
+				case "int64":
 					tocast = false
-				case "int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64":
+				case "int8", "int16", "int32", "int":
 					tocast = false
-					fn.Name = "int"
+					fn.Name = "int64"
+				case "uint64":
+					name.Sel.Name = "FormatUint"
+					tocast = false
+				case "uint8", "uint16", "uint32":
+					name.Sel.Name = "FormatUint"
+					tocast = false
+					fn.Name = "uint64"
 				}
 			}
 		}
@@ -39,6 +46,7 @@ func changeCall(call *ast.CallExpr) {
 	if tocast {
 		call.Args[0] = &ast.CallExpr{Fun: &ast.Ident{Name: "int"}, Args: []ast.Expr{call.Args[0]}}
 	}
+	call.Args = append(call.Args, &ast.BasicLit{Value: "10"})
 }
 
 func main() {
