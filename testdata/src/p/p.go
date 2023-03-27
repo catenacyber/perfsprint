@@ -20,5 +20,5 @@ func sprintfNoBasciLit() {
 }
 
 func prinfLikeFunc() {
-	fmt.Sprintf("%d", 32) // want "Sprintf can be replaced with faster function from strconv"
+	fmt.Sprintf("%d", 32) // want "fmt.Sprintf can be replaced with faster function strconv.Itoa"
 }
