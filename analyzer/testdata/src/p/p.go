@@ -63,10 +63,10 @@ func positive() {
 	fmt.Sprintf("%v", i32)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	fmt.Sprintf("%d", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	fmt.Sprintf("%v", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i64)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i64)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%v", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%d", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%v", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
 
 	var ui uint
 	var ui8 uint8
@@ -97,7 +97,7 @@ func positive() {
 
 func suggestedFixesTest() {
 	_ = func() string {
-		return fmt.Sprintf("replace me") // want "fmt.Sprintf can be replaced with just using the string"
+		return fmt.Sprintf("%s", "replace me") // want "fmt.Sprintf can be replaced with just using the string"
 	}
 
 	fmt.Println(fmt.Sprintf("%s", errSentinel)) // want "fmt.Sprintf can be replaced with errSentinel.Error()"

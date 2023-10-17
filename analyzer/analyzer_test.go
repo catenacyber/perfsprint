@@ -11,7 +11,7 @@ import (
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
-func TestAll(t *testing.T) {
+func TestAnalyzer(t *testing.T) {
 	t.Parallel()
 	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer.Analyzer, "p")
 }

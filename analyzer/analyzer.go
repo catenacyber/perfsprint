@@ -1,9 +1,12 @@
 package analyzer
 
 import (
-	"fmt"
+	"bytes"
 	"go/ast"
+	"go/format"
+	"go/token"
 	"go/types"
+	"strconv"
 
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -19,234 +22,296 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	var fmtpkg *types.Package
+	var fmtSprintfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
-			fmtpkg = pkg
+			fmtSprintfObj = pkg.Scope().Lookup("Sprintf")
 		}
 	}
-	if fmtpkg == nil {
+	if fmtSprintfObj == nil {
 		return nil, nil
 	}
-	inspector := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+
+	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
 		(*ast.CallExpr)(nil),
 	}
-
-	inspector.Preorder(nodeFilter, func(node ast.Node) {
+	insp.Preorder(nodeFilter, func(node ast.Node) {
 		call := node.(*ast.CallExpr)
 		called, ok := call.Fun.(*ast.SelectorExpr)
 		if !ok {
 			return
 		}
-		if pass.TypesInfo.ObjectOf(called.Sel).Pkg() != fmtpkg {
-			return
-		}
-		if called.Sel.Name != "Sprintf" {
+		if pass.TypesInfo.ObjectOf(called.Sel) != fmtSprintfObj {
 			return
 		}
 		if len(call.Args) != 2 {
 			return
 		}
-		arg0, ok := call.Args[0].(*ast.BasicLit)
+
+		fmtString, value := call.Args[0], call.Args[1]
+
+		verbLit, ok := fmtString.(*ast.BasicLit)
 		if !ok {
 			return
 		}
-		var base int
-		switch arg0.Value {
-		case `"%d"`, `"%v"`:
-			base = 10
-		case `"%x"`:
-			base = 16
-		case `"%t"`:
-			base = 1
-		case `"%s"`:
-			base = 0
+		verb, err := strconv.Unquote(verbLit.Value)
+		if err != nil {
+			verb = ""
+		}
+		switch verb {
 		default:
 			return
+		case "%d", "%v", "%x", "%t", "%s":
 		}
-		v := pass.TypesInfo.TypeOf(call.Args[1])
-		s, isslice := v.(*types.Slice)
-		a, isarray := v.(*types.Array)
-		if types.Identical(v, types.Typ[types.Float32]) || types.Identical(v, types.Typ[types.Float64]) {
-		} else if types.Identical(v, types.Typ[types.String]) && base == 0 {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
+
+		valueType := pass.TypesInfo.TypeOf(value)
+		a, isArray := valueType.(*types.Array)
+		s, isSlice := valueType.(*types.Slice)
+
+		var d *analysis.Diagnostic
+		switch {
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
 				Message: "fmt.Sprintf can be replaced with just using the string",
-				// need ro run goimports to fix use of fmt/strconv afterwards
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use strconv.FormatBool",
+						Message: "Just use string value",
 						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
-							NewText: []byte(""),
-						},
-							{
-								Pos:     call.Args[1].End(),
-								End:     node.End(),
-								NewText: []byte(""),
-							},
-						},
+							Pos:     call.Pos(),
+							End:     call.End(),
+							NewText: []byte(formatNode(pass.Fset, value)),
+						}},
 					},
 				},
-			})
-		} else if base == 0 && v.String() == "error" {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with using Error()",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+			}
+
+		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s"):
+			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with " + errMethodCall,
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use Error()",
+						Message: "Use " + errMethodCall,
 						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
-							NewText: []byte(""),
-						},
-							{
-								Pos:     call.Args[1].End(),
-								End:     node.End(),
-								NewText: []byte(".Error()"),
-							},
-						},
+							Pos:     call.Pos(),
+							End:     call.End(),
+							NewText: []byte(errMethodCall),
+						}},
 					},
 				},
-			})
-		} else if types.Identical(v, types.Typ[types.Bool]) && base == 1 {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with faster function strconv.FormatBool",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+			}
+
+		case isBasicType(valueType, types.Bool) && oneOf(verb, "%v", "%t"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.FormatBool",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use strconv.FormatBool",
+						Message: "Use strconv.FormatBool",
 						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
+							Pos:     call.Pos(),
+							End:     value.Pos(),
 							NewText: []byte("strconv.FormatBool("),
 						}},
 					},
 				},
-			})
-		} else if isarray && types.Identical(a.Elem(), types.Typ[types.Uint8]) && base == 16 {
-			_, ok = call.Args[1].(*ast.Ident)
-			if ok {
-				pass.Report(analysis.Diagnostic{
-					Pos:     node.Pos(),
-					End:     node.End(),
-					Message: "fmt.Sprintf can be replaced with faster function hex.EncodeToString",
-					// need ro run goimports to fix use of fmt/encoding/hex afterwards
-					SuggestedFixes: []analysis.SuggestedFix{
-						{
-							Message: "use hex.EncodeToString",
-							TextEdits: []analysis.TextEdit{{
-								Pos:     node.Pos(),
-								End:     call.Args[1].Pos(),
+			}
+
+		case isArray && isBasicType(a.Elem(), types.Uint8) && oneOf(verb, "%x"):
+			if _, ok := value.(*ast.Ident); !ok {
+				// Doesn't support array literals.
+				return
+			}
+
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster hex.EncodeToString",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Use hex.EncodeToString",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     call.Pos(),
+								End:     value.Pos(),
 								NewText: []byte("hex.EncodeToString("),
 							},
-								{
-									Pos:     call.Args[1].End(),
-									End:     call.Args[1].End(),
-									NewText: []byte("[:]"),
-								},
+							{
+								Pos:     value.End(),
+								End:     value.End(),
+								NewText: []byte("[:]"),
 							},
 						},
 					},
-				})
+				},
 			}
-		} else if isslice && types.Identical(s.Elem(), types.Typ[types.Uint8]) && base == 16 {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with faster function hex.EncodeToString",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+		case isSlice && isBasicType(s.Elem(), types.Uint8) && oneOf(verb, "%x"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster hex.EncodeToString",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use hex.EncodeToString",
+						Message: "Use hex.EncodeToString",
 						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
+							Pos:     call.Pos(),
+							End:     value.Pos(),
 							NewText: []byte("hex.EncodeToString("),
 						}},
 					},
 				},
-			})
-		} else if types.Identical(v, types.Typ[types.Int]) && base == 10 {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with faster function strconv.Itoa",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+			}
+
+		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.Itoa",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use strconv.Itoa",
+						Message: "Use strconv.Itoa",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     call.Pos(),
+								End:     value.Pos(),
+								NewText: []byte("strconv.Itoa(int("),
+							},
+							{
+								Pos:     value.End(),
+								End:     value.End(),
+								NewText: []byte(")"),
+							},
+						},
+					},
+				},
+			}
+		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.Itoa",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Use strconv.Itoa",
 						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
+							Pos:     call.Pos(),
+							End:     value.Pos(),
 							NewText: []byte("strconv.Itoa("),
 						}},
 					},
 				},
-			})
-		} else if types.Identical(v, types.Typ[types.Int64]) {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with faster function strconv.FormatInt",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+			}
+		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.FormatInt",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use strconv.FormatInt",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
-							NewText: []byte("strconv.FormatInt("),
-						},
+						Message: "Use strconv.FormatInt",
+						TextEdits: []analysis.TextEdit{
 							{
-								Pos:     call.Args[1].End(),
-								End:     call.Args[1].End(),
-								NewText: []byte(fmt.Sprintf(", %d", base)),
+								Pos:     call.Pos(),
+								End:     call.Args[1].Pos(),
+								NewText: []byte("strconv.FormatInt("),
+							},
+							{
+								Pos:     value.End(),
+								End:     value.End(),
+								NewText: []byte(", 10"),
 							},
 						},
 					},
 				},
-			})
-		} else if types.Identical(v, types.Typ[types.Uint64]) {
-			pass.Report(analysis.Diagnostic{
-				Pos:     node.Pos(),
-				End:     node.End(),
-				Message: "fmt.Sprintf can be replaced with faster function strconv.FormatUint",
-				// need ro run goimports to fix use of fmt/strconv afterwards
+			}
+
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.FormatUint",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "use strconv.FormatUint",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     node.Pos(),
-							End:     call.Args[1].Pos(),
-							NewText: []byte("strconv.FormatUint("),
-						},
+						Message: "Use strconv.FormatUint",
+						TextEdits: []analysis.TextEdit{
 							{
-								Pos:     call.Args[1].End(),
-								End:     call.Args[1].End(),
-								NewText: []byte(fmt.Sprintf(", %d", base)),
+								Pos:     call.Pos(),
+								End:     value.Pos(),
+								NewText: []byte("strconv.FormatUint(uint64("),
+							},
+							{
+								Pos:     value.End(),
+								End:     value.End(),
+								NewText: []byte("), 10"),
 							},
 						},
 					},
 				},
-			})
-		} else if types.Identical(v.Underlying(), types.Typ[types.Int]) && base == 10 {
-		} else if types.Identical(v.Underlying(), types.Typ[types.Int8]) || types.Identical(v.Underlying(), types.Typ[types.Int16]) || types.Identical(v.Underlying(), types.Typ[types.Int32]) {
-		} else if types.Identical(v.Underlying(), types.Typ[types.Uint8]) || types.Identical(v.Underlying(), types.Typ[types.Uint16]) || types.Identical(v.Underlying(), types.Typ[types.Uint32]) || types.Identical(v.Underlying(), types.Typ[types.Uint]){
-		} else if arg0.Value == `"%v"` {
-		} else if base == 0 {
-		} else {
-			pass.Reportf(node.Pos(), "Sprintf can be replaced with faster function from strconv %s/%s", arg0.Value, v.String())
+			}
+		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d"):
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: "fmt.Sprintf can be replaced with faster strconv.FormatUint",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Use strconv.FormatUint",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     call.Pos(),
+								End:     value.Pos(),
+								NewText: []byte("strconv.FormatUint("),
+							},
+							{
+								Pos:     value.End(),
+								End:     value.End(),
+								NewText: []byte(", 10"),
+							},
+						},
+					},
+				},
+			}
+		}
+
+		if d != nil {
+			// Need ro run goimports to fix using of fmt, strconv or encoding/hex afterwards.
+			pass.Report(*d)
 		}
 	})
 
 	return nil, nil
+}
+
+var errIface = types.Universe.Lookup("error").Type().Underlying().(*types.Interface)
+
+func isBasicType(lhs types.Type, expected ...types.BasicKind) bool {
+	for _, rhs := range expected {
+		if types.Identical(lhs, types.Typ[rhs]) {
+			return true
+		}
+	}
+	return false
+}
+
+func formatNode(fset *token.FileSet, node ast.Node) string {
+	buf := new(bytes.Buffer)
+	if err := format.Node(buf, fset, node); err != nil {
+		return ""
+	}
+	return buf.String()
+}
+
+func oneOf[T comparable](v T, expected ...T) bool {
+	for _, rhs := range expected {
+		if v == rhs {
+			return true
+		}
+	}
+	return false
 }

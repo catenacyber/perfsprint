@@ -1,13 +1,12 @@
 package p
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -64,10 +63,10 @@ func positive() {
 	strconv.Itoa(int(i32))           // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int32(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int32(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
 
 	var ui uint
 	var ui8 uint8
