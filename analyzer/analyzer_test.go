@@ -22,7 +22,7 @@ func TestReplacements(t *testing.T) {
 	cases := []struct {
 		before, after string
 	}{
-		{before: fmt.Sprintf("%s", "hello"), after: "hello"},
+		{before: fmt.Sprintf("%s", "hello"), after: "hello"}, //nolint:gosimple //https://staticcheck.io/docs/checks#S1025
 		{before: fmt.Sprintf("%v", "hello"), after: "hello"},
 
 		{before: fmt.Sprintf("%s", io.EOF), after: io.EOF.Error()},

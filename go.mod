@@ -1,6 +1,6 @@
 module github.com/catenacyber/gostrconv
 
-go 1.19
+go 1.20
 
 require golang.org/x/tools v0.14.0
 
