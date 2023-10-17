@@ -16,29 +16,37 @@ func positive() {
 	var s string
 	"hello" // want "fmt.Sprintf can be replaced with just using the string"
 	"hello" // want "fmt.Sprintf can be replaced with just using the string"
+	"hello" // want "fmt.Sprint can be replaced with just using the string"
 	s       // want "fmt.Sprintf can be replaced with just using the string"
 	s       // want "fmt.Sprintf can be replaced with just using the string"
+	s       // want "fmt.Sprint can be replaced with just using the string"
 
 	var err error
 	errSentinel.Error() // want "fmt.Sprintf can be replaced with errSentinel.Error()"
 	errSentinel.Error() // want "fmt.Sprintf can be replaced with errSentinel.Error()"
+	errSentinel.Error() // want "fmt.Sprint can be replaced with errSentinel.Error()"
 	io.EOF.Error()      // want "fmt.Sprintf can be replaced with io.EOF.Error()"
 	io.EOF.Error()      // want "fmt.Sprintf can be replaced with io.EOF.Error()"
+	io.EOF.Error()      // want "fmt.Sprint can be replaced with io.EOF.Error()"
 	err.Error()         // want "fmt.Sprintf can be replaced with err.Error()"
 	err.Error()         // want "fmt.Sprintf can be replaced with err.Error()"
+	err.Error()         // want "fmt.Sprint can be replaced with err.Error()"
 
 	var b bool
-	strconv.FormatBool(true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
 	strconv.FormatBool(false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
 	strconv.FormatBool(false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(b)    // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(b)    // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
 
 	var bs []byte
 	var ba [3]byte
 	hex.EncodeToString([]byte{'a'})  // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	hex.EncodeToString([]uint8{'b'})   // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	hex.EncodeToString([]uint8{'b'}) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
 	hex.EncodeToString(bs)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
 	hex.EncodeToString(ba[:])        // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
 
@@ -49,24 +57,34 @@ func positive() {
 	var i64 int64
 	strconv.Itoa(i)                  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(i)                  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(i)                  // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(42)                 // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(42)                 // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(42)                 // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i8))            // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i8))            // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(i8))            // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int8(42)))      // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int8(42)))      // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(int8(42)))      // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i16))           // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i16))           // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(i16))           // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int16(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int16(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(int16(42)))     // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i32))           // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(i32))           // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(i32))           // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int32(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
 	strconv.Itoa(int(int32(42)))     // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	strconv.Itoa(int(int32(42)))     // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
 	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	strconv.FormatInt(i64, 10)       // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
 	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
 	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	strconv.FormatInt(int64(42), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
 
 	var ui uint
 	var ui8 uint8
@@ -75,36 +93,52 @@ func positive() {
 	var ui64 uint64
 	strconv.FormatUint(uint64(ui), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(ui), 10)         // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint(42)), 10)   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint(42)), 10)   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(uint(42)), 10)   // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui8), 10)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui8), 10)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(ui8), 10)        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint8(42)), 10)  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint8(42)), 10)  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(uint8(42)), 10)  // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui16), 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui16), 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(ui16), 10)       // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint16(42)), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint16(42)), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(uint16(42)), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui32), 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(ui32), 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(ui32), 10)       // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint32(42)), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(uint32(42)), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	strconv.FormatUint(ui64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	strconv.FormatUint(ui64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	strconv.FormatUint(uint64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	strconv.FormatUint(uint64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(uint32(42)), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(ui64, 10)               // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(ui64, 10)               // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(ui64, 10)               // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(42), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(42), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(42), 10)         // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 }
 
 func suggestedFixesTest() {
 	_ = func() string {
+		if false {
+			return "replace me" // want "fmt.Sprint can be replaced with just using the string"
+		}
 		return "replace me" // want "fmt.Sprintf can be replaced with just using the string"
 	}
 
+	fmt.Println(errSentinel.Error()) // want "fmt.Sprint can be replaced with errSentinel.Error()"
 	fmt.Println(errSentinel.Error()) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
 
 	_ = func() string {
-		switch {
-		case true:
+		switch 42 {
+		case 1:
+			return strconv.FormatBool(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+		case 2:
 			return strconv.FormatBool(true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
 		}
 		return ""
@@ -113,6 +147,7 @@ func suggestedFixesTest() {
 	var offset int
 	params := url.Values{}
 	params.Set("offset", strconv.Itoa(offset)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
+	params.Set("offset", strconv.Itoa(offset)) // want "fmt.Sprint can be replaced with faster strconv.Itoa"
 
 	var pubKey []byte
 	if verifyPubKey := true; verifyPubKey {
@@ -122,11 +157,13 @@ func suggestedFixesTest() {
 	var metaHash [16]byte
 	fn := fmt.Sprintf("%s.%x", "coverage.MetaFilePref", metaHash)
 	_ = "tmp." + fn + strconv.FormatInt(time.Now().UnixNano(), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	_ = "tmp." + fn + strconv.FormatInt(time.Now().UnixNano(), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
 
 	var change struct{ User struct{ ID uint } }
 	var userStr string
 	if id := change.User.ID; id != 0 {
 		userStr = strconv.FormatUint(uint64(id), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+		userStr = strconv.FormatUint(uint64(id), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	}
 	_ = userStr
 }
@@ -154,6 +191,7 @@ func negative() {
 	fmt.Sprintf("test")
 	fmt.Sprintf("%v")
 	fmt.Sprintf("%d")
+	fmt.Sprintf("%#d", 42)
 	fmt.Sprintf("value %d", 42)
 	fmt.Sprintf(val, 42)
 	fmt.Sprintf("%s %v", "hello", "world")

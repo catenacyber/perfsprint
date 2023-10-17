@@ -22,9 +22,10 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	var fmtSprintfObj types.Object
+	var fmtSprintObj, fmtSprintfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
+			fmtSprintObj = pkg.Scope().Lookup("Sprint")
 			fmtSprintfObj = pkg.Scope().Lookup("Sprintf")
 		}
 	}
@@ -42,23 +43,37 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		if !ok {
 			return
 		}
-		if pass.TypesInfo.ObjectOf(called.Sel) != fmtSprintfObj {
-			return
-		}
-		if len(call.Args) != 2 {
+		calledObj := pass.TypesInfo.ObjectOf(called.Sel)
+
+		var (
+			fn    string
+			verb  string
+			value ast.Expr
+			err   error
+		)
+		switch {
+		case calledObj == fmtSprintObj && len(call.Args) == 1:
+			fn = "fmt.Sprint"
+			verb = "%v"
+			value = call.Args[0]
+
+		case calledObj == fmtSprintfObj && len(call.Args) == 2:
+			verbLit, ok := call.Args[0].(*ast.BasicLit)
+			if !ok {
+				return
+			}
+			verb, err = strconv.Unquote(verbLit.Value)
+			if err != nil {
+				verb = ""
+			}
+
+			fn = "fmt.Sprintf"
+			value = call.Args[1]
+
+		default:
 			return
 		}
 
-		fmtString, value := call.Args[0], call.Args[1]
-
-		verbLit, ok := fmtString.(*ast.BasicLit)
-		if !ok {
-			return
-		}
-		verb, err := strconv.Unquote(verbLit.Value)
-		if err != nil {
-			verb = ""
-		}
 		switch verb {
 		default:
 			return
@@ -75,7 +90,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with just using the string",
+				Message: fn + " can be replaced with just using the string",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Just use string value",
@@ -93,7 +108,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with " + errMethodCall,
+				Message: fn + " can be replaced with " + errMethodCall,
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use " + errMethodCall,
@@ -110,7 +125,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.FormatBool",
+				Message: fn + " can be replaced with faster strconv.FormatBool",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatBool",
@@ -132,7 +147,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster hex.EncodeToString",
+				Message: fn + " can be replaced with faster hex.EncodeToString",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use hex.EncodeToString",
@@ -155,7 +170,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster hex.EncodeToString",
+				Message: fn + " can be replaced with faster hex.EncodeToString",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use hex.EncodeToString",
@@ -172,7 +187,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.Itoa",
+				Message: fn + " can be replaced with faster strconv.Itoa",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.Itoa",
@@ -195,7 +210,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.Itoa",
+				Message: fn + " can be replaced with faster strconv.Itoa",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.Itoa",
@@ -211,14 +226,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.FormatInt",
+				Message: fn + " can be replaced with faster strconv.FormatInt",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatInt",
 						TextEdits: []analysis.TextEdit{
 							{
 								Pos:     call.Pos(),
-								End:     call.Args[1].Pos(),
+								End:     value.Pos(),
 								NewText: []byte("strconv.FormatInt("),
 							},
 							{
@@ -235,7 +250,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.FormatUint",
+				Message: fn + " can be replaced with faster strconv.FormatUint",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatUint",
@@ -258,7 +273,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: "fmt.Sprintf can be replaced with faster strconv.FormatUint",
+				Message: fn + " can be replaced with faster strconv.FormatUint",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatUint",
