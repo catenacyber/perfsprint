@@ -16,7 +16,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "gostrconv",
-	Doc:      "Checks that fmt.Sprintf can be replaced with a faster analogue.",
+	Doc:      "Checks that fmt.Sprintf can be replaced with a faster alternative.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
