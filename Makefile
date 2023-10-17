@@ -1,4 +1,4 @@
-.PHONY: fmt tidy lint test install
+.PHONY: fmt tidy lint test bench install
 
 default: fmt tidy lint test install
 
@@ -13,6 +13,9 @@ lint:
 
 test:
 	go test ./...
+
+bench:
+	go test -bench=Bench ./...
 
 install:
 	go install .
