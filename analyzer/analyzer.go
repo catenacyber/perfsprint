@@ -64,7 +64,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 			verb, err = strconv.Unquote(verbLit.Value)
 			if err != nil {
-				verb = ""
+				// Probably unreachable.
+				return
 			}
 
 			fn = "fmt.Sprintf"
