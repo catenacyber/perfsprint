@@ -19,4 +19,4 @@ bench:
 
 install:
 	go install .
-	gostrconv -h 2>&1 | head -n1
+	perfsprint -h 2>&1 | head -n1

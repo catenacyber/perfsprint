@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/catenacyber/gostrconv/analyzer"
+	"github.com/catenacyber/perfsprint/analyzer"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 

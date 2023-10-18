@@ -15,7 +15,7 @@ import (
 )
 
 var Analyzer = &analysis.Analyzer{
-	Name:     "gostrconv",
+	Name:     "perfsprint",
 	Doc:      "Checks that fmt.Sprintf can be replaced with a faster alternative.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},

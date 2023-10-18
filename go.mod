@@ -1,4 +1,4 @@
-module github.com/catenacyber/gostrconv
+module github.com/catenacyber/perfsprint
 
 go 1.20
 
