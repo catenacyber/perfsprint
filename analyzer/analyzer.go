@@ -296,7 +296,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if d != nil {
-			// Need ro run goimports to fix using of fmt, strconv or encoding/hex afterwards.
+			// Need to run goimports to fix using of fmt, strconv or encoding/hex afterwards.
 			pass.Report(*d)
 		}
 	})
