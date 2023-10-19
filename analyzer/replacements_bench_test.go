@@ -103,6 +103,29 @@ func BenchmarkIntFormatting(b *testing.B) {
 	})
 }
 
+func BenchmarkIntConversionFormatting(b *testing.B) {
+	b.Run("fmt.Sprint", func(b *testing.B) {
+		u := int32(0x12345678)
+		for n := 0; n < b.N; n++ {
+			_ = fmt.Sprint(u)
+		}
+	})
+
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		u := int32(0x12345678)
+		for n := 0; n < b.N; n++ {
+			_ = fmt.Sprintf("%d", u)
+		}
+	})
+
+	b.Run("strconv.Itoa", func(b *testing.B) {
+		u := int32(0x12345678)
+		for n := 0; n < b.N; n++ {
+			_ = strconv.Itoa(int(u))
+		}
+	})
+}
+
 func BenchmarkUintFormatting(b *testing.B) {
 	b.Run("fmt.Sprint", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
