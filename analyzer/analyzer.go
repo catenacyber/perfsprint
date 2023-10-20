@@ -14,14 +14,27 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
-var Analyzer = &analysis.Analyzer{
-	Name:     "perfsprint",
-	Doc:      "Checks that fmt.Sprintf can be replaced with a faster alternative.",
-	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer},
+type perfSprint struct {
+	intConv bool
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func newPerfSprint() *perfSprint {
+	return &perfSprint{intConv: true}
+}
+
+func New() *analysis.Analyzer {
+	n := newPerfSprint()
+	r := &analysis.Analyzer{
+		Name:     "perfsprint",
+		Doc:      "Checks that fmt.Sprintf can be replaced with a faster alternative.",
+		Run:      n.run,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+	}
+	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it needs an int conversion")
+	return r
+}
+
+func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	var fmtSprintObj, fmtSprintfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
@@ -184,7 +197,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				},
 			}
 
-		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intConv:
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
@@ -247,7 +260,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 				},
 			}
 
-		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d") && n.intConv:
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),

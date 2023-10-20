@@ -13,7 +13,17 @@ import (
 
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer.Analyzer, "p")
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer.New(), "p")
+}
+
+func TestAnalyzerNoConv(t *testing.T) {
+	t.Parallel()
+	a := analyzer.New()
+	err := a.Flags.Set("int-conversion", "false")
+	if err != nil {
+		t.Fatalf("failed to set int-conversion flag")
+	}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "noconv")
 }
 
 func TestReplacements(t *testing.T) {
