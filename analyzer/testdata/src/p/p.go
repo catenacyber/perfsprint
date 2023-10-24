@@ -118,6 +118,8 @@ func positive() {
 	fmt.Sprint(uint32(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%d", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%v", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", uint(42))       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprint(ui64)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%d", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%v", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
@@ -386,7 +388,6 @@ func malformed() {
 	fmt.Sprintf("%F", uint(42))
 	fmt.Sprintf("%g", uint(42))
 	fmt.Sprintf("%G", uint(42))
-	fmt.Sprintf("%x", uint(42))
 	fmt.Sprintf("%X", uint(42))
 
 	fmt.Sprintf("%d", 42.42)

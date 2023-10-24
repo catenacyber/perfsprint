@@ -182,3 +182,19 @@ func BenchmarkUintFormatting(b *testing.B) {
 		b.ReportAllocs()
 	})
 }
+
+func BenchmarkUintHexFormatting(b *testing.B) {
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = fmt.Sprintf("%x", uint64(math.MaxUint))
+		}
+		b.ReportAllocs()
+	})
+
+	b.Run("strconv.FormatUint", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = strconv.FormatUint(math.MaxUint, 16)
+		}
+		b.ReportAllocs()
+	})
+}
