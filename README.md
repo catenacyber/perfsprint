@@ -17,6 +17,8 @@ go get github.com/catenacyber/perfsprint@latest
 perfsprint --fix ./...
 ```
 
+To disable int/uint cast, you can use flag `-int-conversion=false`
+
 ### Replacements
 
 ```

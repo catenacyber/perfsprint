@@ -30,7 +30,7 @@ func New() *analysis.Analyzer {
 		Run:      n.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
-	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it needs an int conversion")
+	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
 	return r
 }
 
