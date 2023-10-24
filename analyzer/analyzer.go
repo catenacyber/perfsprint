@@ -283,7 +283,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			}
 
-		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d") && n.intConv:
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intConv:
+			base := []byte("), 10")
+			if verb == "%x" {
+				base = []byte("), 16")
+			}
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
@@ -300,13 +304,17 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 							{
 								Pos:     value.End(),
 								End:     value.End(),
-								NewText: []byte("), 10"),
+								NewText: base,
 							},
 						},
 					},
 				},
 			}
-		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x"):
+			base := []byte(", 10")
+			if verb == "%x" {
+				base = []byte(", 16")
+			}
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
@@ -323,7 +331,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 							{
 								Pos:     value.End(),
 								End:     value.End(),
-								NewText: []byte(", 10"),
+								NewText: base,
 							},
 						},
 					},
