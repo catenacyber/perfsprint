@@ -14,12 +14,13 @@ var errSentinel = errors.New("connection refused")
 
 func positive() {
 	var s string
-	"hello" // want "fmt.Sprintf can be replaced with just using the string"
-	"hello" // want "fmt.Sprintf can be replaced with just using the string"
-	"hello" // want "fmt.Sprint can be replaced with just using the string"
-	s       // want "fmt.Sprintf can be replaced with just using the string"
-	s       // want "fmt.Sprintf can be replaced with just using the string"
-	s       // want "fmt.Sprint can be replaced with just using the string"
+	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "fmt.Sprint can be replaced with just using the string"
+	s                   // want "fmt.Sprintf can be replaced with just using the string"
+	s                   // want "fmt.Sprintf can be replaced with just using the string"
+	s                   // want "fmt.Sprint can be replaced with just using the string"
+	errors.New("hello") // want "fmt.Errorf can be replaced with errors.New"
 
 	var err error
 	errSentinel.Error() // want "fmt.Sprintf can be replaced with errSentinel.Error()"
@@ -180,6 +181,7 @@ func negative() {
 	fmt.Printf("%v")
 	fmt.Printf("%d", 42)
 	fmt.Printf("%s %d", "hello", 42)
+	fmt.Errorf("this is %s", "complex")
 
 	fmt.Fprint(os.Stdout, "%d", 42)
 	fmt.Fprintf(os.Stdout, "test")

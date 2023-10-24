@@ -3,6 +3,7 @@ package analyzer_test
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -45,6 +46,20 @@ func BenchmarkErrorFormatting(b *testing.B) {
 	b.Run("Error()", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = context.DeadlineExceeded.Error()
+		}
+	})
+}
+
+func BenchmarkFormattingError(b *testing.B) {
+	b.Run("fmt.Errorf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = fmt.Errorf("onlystring")
+		}
+	})
+
+	b.Run("errors.New", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = errors.New("onlystring")
 		}
 	})
 }

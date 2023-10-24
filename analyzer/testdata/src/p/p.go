@@ -20,6 +20,7 @@ func positive() {
 	fmt.Sprintf("%s", s)       // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprintf("%v", s)       // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
+	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
 
 	var err error
 	fmt.Sprintf("%s", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
@@ -180,6 +181,7 @@ func negative() {
 	fmt.Printf("%v")
 	fmt.Printf("%d", 42)
 	fmt.Printf("%s %d", "hello", 42)
+	fmt.Errorf("this is %s", "complex")
 
 	fmt.Fprint(os.Stdout, "%d", 42)
 	fmt.Fprintf(os.Stdout, "test")

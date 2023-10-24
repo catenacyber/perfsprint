@@ -35,14 +35,15 @@ func New() *analysis.Analyzer {
 }
 
 func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
-	var fmtSprintObj, fmtSprintfObj types.Object
+	var fmtSprintObj, fmtSprintfObj, fmtErrorfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
 			fmtSprintObj = pkg.Scope().Lookup("Sprint")
 			fmtSprintfObj = pkg.Scope().Lookup("Sprintf")
+			fmtErrorfObj = pkg.Scope().Lookup("Errorf")
 		}
 	}
-	if fmtSprintfObj == nil {
+	if fmtSprintfObj == nil && fmtSprintObj == nil && fmtErrorfObj == nil {
 		return nil, nil
 	}
 
@@ -65,6 +66,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			err   error
 		)
 		switch {
+		case calledObj == fmtErrorfObj && len(call.Args) == 1:
+			fn = "fmt.Errorf"
+			verb = "%s"
+			value = call.Args[0]
+
 		case calledObj == fmtSprintObj && len(call.Args) == 1:
 			fn = "fmt.Sprint"
 			verb = "%v"
@@ -100,7 +106,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		var d *analysis.Diagnostic
 		switch {
-		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s") && fn != "fmt.Errorf":
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
@@ -112,6 +118,23 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 							Pos:     call.Pos(),
 							End:     call.End(),
 							NewText: []byte(formatNode(pass.Fset, value)),
+						}},
+					},
+				},
+			}
+
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s") && fn == "fmt.Errorf":
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: fn + " can be replaced with errors.New",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Use errors.New",
+						TextEdits: []analysis.TextEdit{{
+							Pos:     call.Pos(),
+							End:     value.Pos(),
+							NewText: []byte("errors.New("),
 						}},
 					},
 				},
