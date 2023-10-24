@@ -119,7 +119,7 @@ func positive() {
 	strconv.FormatUint(ui64, 10)               // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(ui64, 10)               // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(ui64, 16)               // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%x", uint(42))                // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	strconv.FormatUint(uint64(uint(42)), 16)   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(ui64, 10)               // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(42), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	strconv.FormatUint(uint64(42), 10)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
