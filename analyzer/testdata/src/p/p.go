@@ -22,6 +22,9 @@ func positive() {
 	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
 	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
 
+	fmt.Sprintf("Hello %s", s)      // want "fmt.Sprintf can be replaced with string addition"
+	fmt.Sprintf("%s says Hello", s) // want "fmt.Sprintf can be replaced with string addition"
+
 	var err error
 	fmt.Sprintf("%s", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
 	fmt.Sprintf("%v", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
@@ -119,7 +122,7 @@ func positive() {
 	fmt.Sprintf("%d", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%v", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%x", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%x", uint(42))       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprint(ui64)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%d", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%v", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"

@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"go/types"
 	"strconv"
+	"strings"
 
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -96,6 +97,9 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		switch verb {
 		default:
+			if fn == "fmt.Sprintf" && (strings.HasPrefix(verb, "%s") || strings.HasSuffix(verb, "%s")) {
+				break
+			}
 			return
 		case "%d", "%v", "%x", "%t", "%s":
 		}
@@ -334,6 +338,28 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 								NewText: base,
 							},
 						},
+					},
+				},
+			}
+		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && (strings.HasPrefix(verb, "%s") || strings.HasSuffix(verb, "%s")):
+			var fix string
+			if strings.HasSuffix(verb, "%s") {
+				fix = strconv.Quote(verb[:len(verb)-2]) + " + " + formatNode(pass.Fset, value)
+			} else {
+				fix = formatNode(pass.Fset, value) + " + " + strconv.Quote(verb[2:])
+			}
+			d = &analysis.Diagnostic{
+				Pos:     call.Pos(),
+				End:     call.End(),
+				Message: fn + " can be replaced with string addition",
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: "Use string addition",
+						TextEdits: []analysis.TextEdit{{
+							Pos:     call.Pos(),
+							End:     call.End(),
+							NewText: []byte(fix),
+						}},
 					},
 				},
 			}
