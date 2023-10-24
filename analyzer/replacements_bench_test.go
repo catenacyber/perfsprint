@@ -198,3 +198,19 @@ func BenchmarkUintHexFormatting(b *testing.B) {
 		b.ReportAllocs()
 	})
 }
+
+func BenchmarkStringAdditionFormatting(b *testing.B) {
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = fmt.Sprintf("Hello %s", "world")
+		}
+		b.ReportAllocs()
+	})
+
+	b.Run("string addition", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			_ = "Hello " + "world"
+		}
+		b.ReportAllocs()
+	})
+}
