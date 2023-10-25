@@ -16,11 +16,12 @@ import (
 )
 
 type perfSprint struct {
-	intConv bool
+	intConv  bool
+	errError bool
 }
 
 func newPerfSprint() *perfSprint {
-	return &perfSprint{intConv: true}
+	return &perfSprint{intConv: true, errError: false}
 }
 
 func New() *analysis.Analyzer {
@@ -32,6 +33,7 @@ func New() *analysis.Analyzer {
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
+	r.Flags.BoolVar(&n.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
 	return r
 }
 
@@ -144,7 +146,9 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			}
 
-		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s"):
+		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errError:
+			// known false positive if this error is nil
+			// fmt.Sprint(nil) does not panic like nil.Error() does
 			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
@@ -366,7 +370,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if d != nil {
-			// Need to run goimports to fix using of fmt, strconv or encoding/hex afterwards.
+			// Need to run goimports to fix using of fmt, strconv, errors or encoding/hex afterwards.
 			pass.Report(*d)
 		}
 	})

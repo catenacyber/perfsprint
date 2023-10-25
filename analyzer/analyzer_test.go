@@ -13,7 +13,22 @@ import (
 
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), analyzer.New(), "p")
+	a := analyzer.New()
+	err := a.Flags.Set("err-error", "true")
+	if err != nil {
+		t.Fatalf("failed to set err-error flag")
+	}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "p")
+}
+
+func TestAnalyzerNoErrError(t *testing.T) {
+	t.Parallel()
+	a := analyzer.New()
+	err := a.Flags.Set("err-error", "false")
+	if err != nil {
+		t.Fatalf("failed to set err-error flag")
+	}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "nilerror")
 }
 
 func TestAnalyzerNoConv(t *testing.T) {
