@@ -16,6 +16,7 @@ func positive() {
 	var s string
 	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
 	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
 	"hello"             // want "fmt.Sprint can be replaced with just using the string"
 	s                   // want "fmt.Sprintf can be replaced with just using the string"
 	s                   // want "fmt.Sprintf can be replaced with just using the string"
@@ -197,9 +198,6 @@ func negative() {
 
 	fmt.Sprint("test", 42)
 	fmt.Sprint(42, 42)
-	fmt.Sprintf("test")
-	fmt.Sprintf("%v")
-	fmt.Sprintf("%d")
 	fmt.Sprintf("%d", 42, 42)
 	fmt.Sprintf("%#d", 42)
 	fmt.Sprintf("value %d", 42)

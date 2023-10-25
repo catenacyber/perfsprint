@@ -104,9 +104,6 @@ func negative() {
 
 	fmt.Sprint("test", 42)
 	fmt.Sprint(42, 42)
-	fmt.Sprintf("test")
-	fmt.Sprintf("%v")
-	fmt.Sprintf("%d")
 	fmt.Sprintf("%d", 42, 42)
 	fmt.Sprintf("%#d", 42)
 	fmt.Sprintf("value %d", 42)

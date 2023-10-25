@@ -20,6 +20,22 @@ perfsprint --fix ./...
 To disable int/uint cast, you can use the flag `-int-conversion=false`
 
 To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`
+This optimization is not always equivalent.
+The code
+```
+msg := "format string attack %s"
+fmt.Errorf(msg)
+```
+will panic when its optimized version will not (so it should be safer).
+
+To disable `fmt.Sprintf("toto")` optimization, you can use the flag `-sprintf1=false`
+This optimization is not always equivalent.
+The code
+```
+msg := "format string attack %s"
+fmt.Sprintf(msg)
+```
+will panic when its optimized version will not (so it should be safer).
 
 To enable `err.Error()` optimization, you can use the flag `-err-error=true`
 This optimization only works when the error is not nil, otherwise the resulting code will panic.
