@@ -19,10 +19,16 @@ type perfSprint struct {
 	intConv  bool
 	errError bool
 	errorf   bool
+	sprintf1 bool
 }
 
 func newPerfSprint() *perfSprint {
-	return &perfSprint{intConv: true, errError: false, errorf: true}
+	return &perfSprint{
+		intConv:  true,
+		errError: false,
+		errorf:   true,
+		sprintf1: true,
+	}
 }
 
 func New() *analysis.Analyzer {
@@ -36,6 +42,7 @@ func New() *analysis.Analyzer {
 	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
 	r.Flags.BoolVar(&n.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
 	r.Flags.BoolVar(&n.errorf, "errorf", true, "optimizes fmt.Errorf")
+	r.Flags.BoolVar(&n.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
 	return r
 }
 
@@ -80,6 +87,13 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			fn = "fmt.Sprint"
 			verb = "%v"
 			value = call.Args[0]
+
+		case calledObj == fmtSprintfObj && len(call.Args) == 1:
+			if n.sprintf1 {
+				fn = "fmt.Sprintf"
+				verb = "%s"
+				value = call.Args[0]
+			}
 
 		case calledObj == fmtSprintfObj && len(call.Args) == 2:
 			verbLit, ok := call.Args[0].(*ast.BasicLit)
