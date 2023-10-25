@@ -112,40 +112,40 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		var d *analysis.Diagnostic
 		switch {
-		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s") && fn != "fmt.Errorf":
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with just using the string",
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						Message: "Just use string value",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     call.End(),
-							NewText: []byte(formatNode(pass.Fset, value)),
-						}},
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
+			if fn == "fmt.Errorf" {
+				d = &analysis.Diagnostic{
+					Pos:     call.Pos(),
+					End:     call.End(),
+					Message: fn + " can be replaced with errors.New",
+					SuggestedFixes: []analysis.SuggestedFix{
+						{
+							Message: "Use errors.New",
+							TextEdits: []analysis.TextEdit{{
+								Pos:     call.Pos(),
+								End:     value.Pos(),
+								NewText: []byte("errors.New("),
+							}},
+						},
 					},
-				},
-			}
-
-		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s") && fn == "fmt.Errorf":
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with errors.New",
-				SuggestedFixes: []analysis.SuggestedFix{
-					{
-						Message: "Use errors.New",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     value.Pos(),
-							NewText: []byte("errors.New("),
-						}},
+				}
+			} else {
+				d = &analysis.Diagnostic{
+					Pos:     call.Pos(),
+					End:     call.End(),
+					Message: fn + " can be replaced with just using the string",
+					SuggestedFixes: []analysis.SuggestedFix{
+						{
+							Message: "Just use string value",
+							TextEdits: []analysis.TextEdit{{
+								Pos:     call.Pos(),
+								End:     call.End(),
+								NewText: []byte(formatNode(pass.Fset, value)),
+							}},
+						},
 					},
-				},
+				}
 			}
-
 		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errError:
 			// known false positive if this error is nil
 			// fmt.Sprint(nil) does not panic like nil.Error() does
