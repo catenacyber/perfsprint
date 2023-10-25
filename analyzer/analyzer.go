@@ -18,10 +18,11 @@ import (
 type perfSprint struct {
 	intConv  bool
 	errError bool
+	errorf   bool
 }
 
 func newPerfSprint() *perfSprint {
-	return &perfSprint{intConv: true, errError: false}
+	return &perfSprint{intConv: true, errError: false, errorf: true}
 }
 
 func New() *analysis.Analyzer {
@@ -34,6 +35,7 @@ func New() *analysis.Analyzer {
 	}
 	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
 	r.Flags.BoolVar(&n.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
+	r.Flags.BoolVar(&n.errorf, "errorf", true, "optimizes fmt.Errorf")
 	return r
 }
 

@@ -17,7 +17,12 @@ go get github.com/catenacyber/perfsprint@latest
 perfsprint --fix ./...
 ```
 
-To disable int/uint cast, you can use flag `-int-conversion=false`
+To disable int/uint cast, you can use the flag `-int-conversion=false`
+
+To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`
+
+To enable `err.Error()` optimization, you can use the flag `-err-error=true`
+This optimization only works when the error is not nil, otherwise the resulting code will panic.
 
 ### Replacements
 
