@@ -344,9 +344,9 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && (strings.HasPrefix(verb, "%s") || strings.HasSuffix(verb, "%s")):
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
-				fix = strconv.Quote(verb[:len(verb)-2]) + " + " + formatNode(pass.Fset, value)
+				fix = strconv.Quote(verb[:len(verb)-2]) + "+" + formatNode(pass.Fset, value)
 			} else {
-				fix = formatNode(pass.Fset, value) + " + " + strconv.Quote(verb[2:])
+				fix = formatNode(pass.Fset, value) + "+" + strconv.Quote(verb[2:])
 			}
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
