@@ -111,6 +111,24 @@ func BenchmarkHexEncoding(b *testing.B) {
 	})
 }
 
+func BenchmarkHexArrayEncoding(b *testing.B) {
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			val := [3]byte{'a', 'b', 'c'}
+			_ = fmt.Sprintf("%x", val)
+		}
+		b.ReportAllocs()
+	})
+
+	b.Run("hex.EncodeToString", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			val := [3]byte{'a', 'b', 'c'}
+			_ = hex.EncodeToString(val[:])
+		}
+		b.ReportAllocs()
+	})
+}
+
 func BenchmarkIntFormatting(b *testing.B) {
 	b.Run("fmt.Sprint", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
