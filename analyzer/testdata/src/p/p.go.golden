@@ -1,12 +1,14 @@
 package p
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/url"
 	"os"
+	"strconv" // want "Fix imports"
 	"time"
 )
 
