@@ -82,9 +82,13 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		)
 		switch {
 		case calledObj == fmtErrorfObj && len(call.Args) == 1:
-			fn = "fmt.Errorf"
-			verb = "%s"
-			value = call.Args[0]
+			if n.errorf {
+				fn = "fmt.Errorf"
+				verb = "%s"
+				value = call.Args[0]
+			} else {
+				return
+			}
 
 		case calledObj == fmtSprintObj && len(call.Args) == 1:
 			fn = "fmt.Sprint"
@@ -139,28 +143,25 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			if !ok {
 				neededPackages[fname] = make(map[string]bool)
 			}
+			removedFmtUsages[fname] = removedFmtUsages[fname] + 1
 			if fn == "fmt.Errorf" {
-				if n.errorf {
-					removedFmtUsages[fname] = removedFmtUsages[fname] + 1
-					neededPackages[fname]["errors"] = true
-					d = &analysis.Diagnostic{
-						Pos:     call.Pos(),
-						End:     call.End(),
-						Message: fn + " can be replaced with errors.New",
-						SuggestedFixes: []analysis.SuggestedFix{
-							{
-								Message: "Use errors.New",
-								TextEdits: []analysis.TextEdit{{
-									Pos:     call.Pos(),
-									End:     value.Pos(),
-									NewText: []byte("errors.New("),
-								}},
-							},
+				neededPackages[fname]["errors"] = true
+				d = &analysis.Diagnostic{
+					Pos:     call.Pos(),
+					End:     call.End(),
+					Message: fn + " can be replaced with errors.New",
+					SuggestedFixes: []analysis.SuggestedFix{
+						{
+							Message: "Use errors.New",
+							TextEdits: []analysis.TextEdit{{
+								Pos:     call.Pos(),
+								End:     value.Pos(),
+								NewText: []byte("errors.New("),
+							}},
 						},
-					}
+					},
 				}
 			} else {
-				removedFmtUsages[fname] = removedFmtUsages[fname] + 1
 				d = &analysis.Diagnostic{
 					Pos:     call.Pos(),
 					End:     call.End(),
