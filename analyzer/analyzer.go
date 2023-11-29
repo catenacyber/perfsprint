@@ -478,7 +478,6 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if d != nil {
-			// Need to run goimports to fix using of fmt, strconv, errors or encoding/hex afterwards.
 			pass.Report(*d)
 		}
 	})
