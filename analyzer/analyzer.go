@@ -96,6 +96,8 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				fn = "fmt.Sprintf"
 				verb = "%s"
 				value = call.Args[0]
+			} else {
+				return
 			}
 
 		case calledObj == fmtSprintfObj && len(call.Args) == 2:
