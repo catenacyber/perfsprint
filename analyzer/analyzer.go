@@ -47,6 +47,18 @@ func New() *analysis.Analyzer {
 	return r
 }
 
+// true if verb is a format string that could be replaced with concatenation.
+func isConcatable(verb string) bool {
+	hasPrefix :=
+		(strings.HasPrefix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
+			(strings.HasPrefix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
+	hasSuffix :=
+		(strings.HasSuffix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
+			(strings.HasSuffix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
+
+	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
+}
+
 func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	var fmtSprintObj, fmtSprintfObj, fmtErrorfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
@@ -124,7 +136,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		switch verb {
 		default:
-			if fn == "fmt.Sprintf" && (strings.HasPrefix(verb, "%s") || strings.HasSuffix(verb, "%s")) {
+			if fn == "fmt.Sprintf" && isConcatable(verb) {
 				break
 			}
 			return
@@ -435,12 +447,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			}
-		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && (strings.HasPrefix(verb, "%s") || strings.HasSuffix(verb, "%s")):
+		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb):
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
 				fix = strconv.Quote(verb[:len(verb)-2]) + "+" + formatNode(pass.Fset, value)
-			} else {
+			} else if strings.HasSuffix(verb, "%[1]s") {
+				fix = strconv.Quote(verb[:len(verb)-5]) + "+" + formatNode(pass.Fset, value)
+			} else if strings.HasPrefix(verb, "%s") {
 				fix = formatNode(pass.Fset, value) + "+" + strconv.Quote(verb[2:])
+			} else {
+				fix = formatNode(pass.Fset, value) + "+" + strconv.Quote(verb[5:])
 			}
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname] = removedFmtUsages[fname] + 1

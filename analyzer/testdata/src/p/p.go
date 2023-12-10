@@ -23,8 +23,9 @@ func positive() {
 	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
 	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
 
-	fmt.Sprintf("Hello %s", s)      // want "fmt.Sprintf can be replaced with string addition"
-	fmt.Sprintf("%s says Hello", s) // want "fmt.Sprintf can be replaced with string addition"
+	fmt.Sprintf("Hello %s", s)         // want "fmt.Sprintf can be replaced with string addition"
+	fmt.Sprintf("%s says Hello", s)    // want "fmt.Sprintf can be replaced with string addition"
+	fmt.Sprintf("Hello says %[1]s", s) // want "fmt.Sprintf can be replaced with string addition"
 
 	var err error
 	fmt.Sprintf("%s", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
@@ -209,6 +210,7 @@ func negative() {
 	fmt.Sprintf("%3d", 42)
 	fmt.Sprintf("% d", 42)
 	fmt.Sprintf("%-10d", 42)
+	fmt.Sprintf("%s %[1]s", "hello")
 	fmt.Sprintf("%[2]d %[1]d\n", 11, 22)
 	fmt.Sprintf("%[3]*.[2]*[1]f", 12.0, 2, 6)
 	fmt.Sprintf("%d %d %#[1]x %#x", 16, 17)
