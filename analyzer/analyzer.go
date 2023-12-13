@@ -126,6 +126,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				// Probably unreachable.
 				return
 			}
+			// one single explicit arg is simplified
+			if strings.HasPrefix(verb, "%[1]") {
+				verb = "%" + verb[4:]
+			}
 
 			fn = "fmt.Sprintf"
 			value = call.Args[1]
@@ -140,7 +144,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				break
 			}
 			return
-		case "%d", "%v", "%x", "%t", "%s", "%[1]s":
+		case "%d", "%v", "%x", "%t", "%s":
 		}
 
 		valueType := pass.TypesInfo.TypeOf(value)
@@ -149,7 +153,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		var d *analysis.Diagnostic
 		switch {
-		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s", "%[1]s"):
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			_, ok := neededPackages[fname]
 			if !ok {
