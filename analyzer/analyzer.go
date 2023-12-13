@@ -140,7 +140,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				break
 			}
 			return
-		case "%d", "%v", "%x", "%t", "%s":
+		case "%d", "%v", "%x", "%t", "%s", "%[1]s":
 		}
 
 		valueType := pass.TypesInfo.TypeOf(value)
@@ -149,7 +149,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		var d *analysis.Diagnostic
 		switch {
-		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
+		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s", "%[1]s"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			_, ok := neededPackages[fname]
 			if !ok {
