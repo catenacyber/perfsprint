@@ -19,6 +19,7 @@ func positive() {
 	fmt.Sprintf("hello")       // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprint("hello")        // want "fmt.Sprint can be replaced with just using the string"
 	fmt.Sprintf("%s", s)       // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%[1]s", s)    // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprintf("%v", s)       // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
 	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
