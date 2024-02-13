@@ -473,10 +473,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			d = &analysis.Diagnostic{
 				Pos:     call.Pos(),
 				End:     call.End(),
-				Message: fn + " can be replaced with string addition",
+				Message: fn + " can be replaced with string concatenation",
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "Use string addition",
+						Message: "Use string concatenation",
 						TextEdits: []analysis.TextEdit{{
 							Pos:     call.Pos(),
 							End:     call.End(),
