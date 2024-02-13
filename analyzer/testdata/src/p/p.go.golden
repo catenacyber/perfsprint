@@ -26,9 +26,9 @@ func positive() {
 	s                   // want "fmt.Sprint can be replaced with just using the string"
 	errors.New("hello") // want "fmt.Errorf can be replaced with errors.New"
 
-	"Hello " + s      // want "fmt.Sprintf can be replaced with string addition"
-	s + " says Hello" // want "fmt.Sprintf can be replaced with string addition"
-	"Hello says " + s // want "fmt.Sprintf can be replaced with string addition"
+	"Hello " + s      // want "fmt.Sprintf can be replaced with string concatenation"
+	s + " says Hello" // want "fmt.Sprintf can be replaced with string concatenation"
+	"Hello says " + s // want "fmt.Sprintf can be replaced with string concatenation"
 
 	var err error
 	errSentinel.Error() // want "fmt.Sprintf can be replaced with errSentinel.Error()"

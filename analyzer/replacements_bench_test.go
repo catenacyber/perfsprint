@@ -225,7 +225,7 @@ func BenchmarkStringAdditionFormatting(b *testing.B) {
 		b.ReportAllocs()
 	})
 
-	b.Run("string addition", func(b *testing.B) {
+	b.Run("string concatenation", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = "Hello " + "world"
 		}
