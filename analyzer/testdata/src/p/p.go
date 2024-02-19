@@ -212,6 +212,7 @@ func negative() {
 	fmt.Sprintf("% d", 42)
 	fmt.Sprintf("%-10d", 42)
 	fmt.Sprintf("%s %[1]s", "hello")
+	fmt.Sprintf("%[1]s %[1]s", "hello")
 	fmt.Sprintf("%[2]d %[1]d\n", 11, 22)
 	fmt.Sprintf("%[3]*.[2]*[1]f", 12.0, 2, 6)
 	fmt.Sprintf("%d %d %#[1]x %#x", 16, 17)
