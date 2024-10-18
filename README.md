@@ -8,7 +8,7 @@ Golang linter for performance, aiming at usages of `fmt.Sprintf` which have fast
 ## Installation
 
 ```sh
-go get github.com/catenacyber/perfsprint@latest
+go install github.com/catenacyber/perfsprint@latest
 ```
 
 ## Usage
