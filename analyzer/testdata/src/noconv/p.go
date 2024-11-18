@@ -2,7 +2,7 @@ package noconv
 
 import (
 	"errors"
-	"fmt" // want "Fix imports"
+	"fmt"
 	"os"
 )
 
@@ -14,12 +14,12 @@ func positive() {
 	var i16 int16
 	var i32 int32
 	var i64 int64
-	fmt.Sprintf("%d", i)  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i)  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i)         // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", 42) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", 42) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(42)        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i)
+	fmt.Sprintf("%v", i)
+	fmt.Sprint(i)
+	fmt.Sprintf("%d", 42)
+	fmt.Sprintf("%v", 42)
+	fmt.Sprint(42)
 	fmt.Sprintf("%d", i8)
 	fmt.Sprintf("%v", i8)
 	fmt.Sprint(i8)
@@ -38,12 +38,12 @@ func positive() {
 	fmt.Sprintf("%d", int32(42))
 	fmt.Sprintf("%v", int32(42))
 	fmt.Sprint(int32(42))
-	fmt.Sprintf("%d", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%v", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprint(i64)              // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%d", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%v", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprint(int64(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%d", i64)
+	fmt.Sprintf("%v", i64)
+	fmt.Sprint(i64)
+	fmt.Sprintf("%d", int64(42))
+	fmt.Sprintf("%v", int64(42))
+	fmt.Sprint(int64(42))
 
 	var ui uint
 	var ui8 uint8
@@ -74,12 +74,12 @@ func positive() {
 	fmt.Sprintf("%d", uint32(42))
 	fmt.Sprintf("%v", uint32(42))
 	fmt.Sprint(uint32(42))
-	fmt.Sprintf("%d", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui64)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint64(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui64)
+	fmt.Sprintf("%v", ui64)
+	fmt.Sprint(ui64)
+	fmt.Sprintf("%d", uint64(42))
+	fmt.Sprintf("%v", uint64(42))
+	fmt.Sprint(uint64(42))
 }
 
 func negative() {
