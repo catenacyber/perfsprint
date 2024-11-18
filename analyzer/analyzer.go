@@ -171,11 +171,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			removedFmtUsages[fname]++
 			if fn == "fmt.Errorf" {
 				neededPackages[fname]["errors"] = true
-				d = &analysis.Diagnostic{
-					Pos:     call.Pos(),
-					End:     call.End(),
-					Message: fn + " can be replaced with errors.New",
-					SuggestedFixes: []analysis.SuggestedFix{
+				d = newAnalysisDiagnostic(
+					"", // TODO: precise checker
+					call,
+					fn+" can be replaced with errors.New",
+					[]analysis.SuggestedFix{
 						{
 							Message: "Use errors.New",
 							TextEdits: []analysis.TextEdit{{
@@ -185,13 +185,13 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 							}},
 						},
 					},
-				}
+				)
 			} else {
-				d = &analysis.Diagnostic{
-					Pos:     call.Pos(),
-					End:     call.End(),
-					Message: fn + " can be replaced with just using the string",
-					SuggestedFixes: []analysis.SuggestedFix{
+				d = newAnalysisDiagnostic(
+					"", // TODO: precise checker
+					call,
+					fn+" can be replaced with just using the string",
+					[]analysis.SuggestedFix{
 						{
 							Message: "Just use string value",
 							TextEdits: []analysis.TextEdit{{
@@ -201,7 +201,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 							}},
 						},
 					},
-				}
+				)
 			}
 		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errError:
 			// known false positive if this error is nil
@@ -209,11 +209,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with " + errMethodCall,
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with "+errMethodCall,
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use " + errMethodCall,
 						TextEdits: []analysis.TextEdit{{
@@ -223,7 +223,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}},
 					},
 				},
-			}
+			)
 
 		case isBasicType(valueType, types.Bool) && oneOf(verb, "%v", "%t"):
 			fname := pass.Fset.File(call.Pos()).Name()
@@ -233,11 +233,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.FormatBool",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.FormatBool",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatBool",
 						TextEdits: []analysis.TextEdit{{
@@ -247,7 +247,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}},
 					},
 				},
-			}
+			)
 
 		case isArray && isBasicType(a.Elem(), types.Uint8) && oneOf(verb, "%x"):
 			if _, ok := value.(*ast.Ident); !ok {
@@ -262,11 +262,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["encoding/hex"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster hex.EncodeToString",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster hex.EncodeToString",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use hex.EncodeToString",
 						TextEdits: []analysis.TextEdit{
@@ -283,7 +283,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				},
-			}
+			)
 		case isSlice && isBasicType(s.Elem(), types.Uint8) && oneOf(verb, "%x"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
@@ -292,11 +292,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["encoding/hex"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster hex.EncodeToString",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster hex.EncodeToString",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use hex.EncodeToString",
 						TextEdits: []analysis.TextEdit{{
@@ -306,7 +306,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}},
 					},
 				},
-			}
+			)
 
 		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intConv:
 			fname := pass.Fset.File(call.Pos()).Name()
@@ -316,11 +316,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.Itoa",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.Itoa",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.Itoa",
 						TextEdits: []analysis.TextEdit{
@@ -337,7 +337,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				},
-			}
+			)
 		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
@@ -346,11 +346,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.Itoa",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.Itoa",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.Itoa",
 						TextEdits: []analysis.TextEdit{{
@@ -360,7 +360,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}},
 					},
 				},
-			}
+			)
 		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
@@ -369,11 +369,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.FormatInt",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.FormatInt",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatInt",
 						TextEdits: []analysis.TextEdit{
@@ -390,7 +390,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				},
-			}
+			)
 
 		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intConv:
 			base := []byte("), 10")
@@ -404,11 +404,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.FormatUint",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.FormatUint",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatUint",
 						TextEdits: []analysis.TextEdit{
@@ -425,7 +425,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				},
-			}
+			)
 		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x"):
 			base := []byte(", 10")
 			if verb == "%x" {
@@ -438,11 +438,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]bool)
 			}
 			neededPackages[fname]["strconv"] = true
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with faster strconv.FormatUint",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with faster strconv.FormatUint",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use strconv.FormatUint",
 						TextEdits: []analysis.TextEdit{
@@ -459,7 +459,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				},
-			}
+			)
 		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb):
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
@@ -473,11 +473,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			}
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			d = &analysis.Diagnostic{
-				Pos:     call.Pos(),
-				End:     call.End(),
-				Message: fn + " can be replaced with string concatenation",
-				SuggestedFixes: []analysis.SuggestedFix{
+			d = newAnalysisDiagnostic(
+				"", // TODO: precise checker
+				call,
+				fn+" can be replaced with string concatenation",
+				[]analysis.SuggestedFix{
 					{
 						Message: "Use string concatenation",
 						TextEdits: []analysis.TextEdit{{
@@ -487,7 +487,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}},
 					},
 				},
-			}
+			)
 		}
 
 		if d != nil {
@@ -553,11 +553,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				for _, k := range keys {
 					fix = fix + "\n\t\"" + k + `"`
 				}
-				pass.Report(analysis.Diagnostic{
-					Pos:     gd.Pos(),
-					End:     gd.End(),
-					Message: "Fix imports",
-					SuggestedFixes: []analysis.SuggestedFix{
+				pass.Report(*newAnalysisDiagnostic(
+					"", // TODO: precise checker
+					gd,
+					"Fix imports",
+					[]analysis.SuggestedFix{
 						{
 							Message: "Fix imports",
 							TextEdits: []analysis.TextEdit{{
@@ -566,7 +566,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 								NewText: []byte(fix),
 							}},
 						},
-					}})
+					}))
 			}
 		})
 	}
