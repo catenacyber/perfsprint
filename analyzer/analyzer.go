@@ -102,28 +102,20 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			err   error
 		)
 		switch {
-		case calledObj == fmtErrorfObj && len(call.Args) == 1:
-			if n.errorf {
-				fn = "fmt.Errorf"
-				verb = "%s"
-				value = call.Args[0]
-			} else {
-				return
-			}
+		case calledObj == fmtErrorfObj && len(call.Args) == 1 && n.errorf:
+			fn = "fmt.Errorf"
+			verb = "%s"
+			value = call.Args[0]
 
 		case calledObj == fmtSprintObj && len(call.Args) == 1:
 			fn = "fmt.Sprint"
 			verb = "%v"
 			value = call.Args[0]
 
-		case calledObj == fmtSprintfObj && len(call.Args) == 1:
-			if n.sprintf1 {
-				fn = "fmt.Sprintf"
-				verb = "%s"
-				value = call.Args[0]
-			} else {
-				return
-			}
+		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.sprintf1:
+			fn = "fmt.Sprintf"
+			verb = "%s"
+			value = call.Args[0]
 
 		case calledObj == fmtSprintfObj && len(call.Args) == 2:
 			verbLit, ok := call.Args[0].(*ast.BasicLit)
