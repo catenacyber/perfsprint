@@ -330,7 +330,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			}
-		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d") && n.intConv:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			_, ok := neededPackages[fname]
@@ -353,7 +353,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			}
-		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d") && n.intConv:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			_, ok := neededPackages[fname]
@@ -418,7 +418,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			}
-		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x"):
+		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x") && n.intConv:
 			base := []byte(", 10")
 			if verb == "%x" {
 				base = []byte(", 16")

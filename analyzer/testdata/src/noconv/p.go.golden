@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv" // want "Fix imports"
+	"strconv"
 )
 
 var errSentinel = errors.New("connection refused")
@@ -15,12 +15,12 @@ func positive() {
 	var i16 int16
 	var i32 int32
 	var i64 int64
-	strconv.Itoa(i)  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.Itoa(i)  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.Itoa(i)  // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	strconv.Itoa(42) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.Itoa(42) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	strconv.Itoa(42) // want "fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i)
+	fmt.Sprintf("%v", i)
+	fmt.Sprint(i)
+	fmt.Sprintf("%d", 42)
+	fmt.Sprintf("%v", 42)
+	fmt.Sprint(42)
 	fmt.Sprintf("%d", i8)
 	fmt.Sprintf("%v", i8)
 	fmt.Sprint(i8)
@@ -39,12 +39,12 @@ func positive() {
 	fmt.Sprintf("%d", int32(42))
 	fmt.Sprintf("%v", int32(42))
 	fmt.Sprint(int32(42))
-	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	strconv.FormatInt(i64, 10)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	strconv.FormatInt(i64, 10)       // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
-	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	strconv.FormatInt(int64(42), 10) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	strconv.FormatInt(int64(42), 10) // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%d", i64)
+	fmt.Sprintf("%v", i64)
+	fmt.Sprint(i64)
+	fmt.Sprintf("%d", int64(42))
+	fmt.Sprintf("%v", int64(42))
+	fmt.Sprint(int64(42))
 
 	var ui uint
 	var ui8 uint8
