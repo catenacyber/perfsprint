@@ -24,7 +24,7 @@ jobs:
 
       - name: Check and get dependencies
         run: |
-          make tidy
+          go mod tidy
           git diff --exit-code go.mod
           git diff --exit-code go.sum
 
