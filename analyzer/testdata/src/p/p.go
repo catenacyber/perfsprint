@@ -22,22 +22,22 @@ func positive() {
 	fmt.Sprintf("%[1]s", s)    // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprintf("%v", s)       // want "fmt.Sprintf can be replaced with just using the string"
 	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
-	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
+	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with faster errors.New"
 
 	fmt.Sprintf("Hello %s", s)         // want "fmt.Sprintf can be replaced with string concatenation"
 	fmt.Sprintf("%s says Hello", s)    // want "fmt.Sprintf can be replaced with string concatenation"
 	fmt.Sprintf("Hello says %[1]s", s) // want "fmt.Sprintf can be replaced with string concatenation"
 
 	var err error
-	fmt.Sprintf("%s", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
-	fmt.Sprintf("%v", errSentinel) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
-	fmt.Sprint(errSentinel)        // want "fmt.Sprint can be replaced with errSentinel.Error()"
-	fmt.Sprintf("%s", io.EOF)      // want "fmt.Sprintf can be replaced with io.EOF.Error()"
-	fmt.Sprintf("%v", io.EOF)      // want "fmt.Sprintf can be replaced with io.EOF.Error()"
-	fmt.Sprint(io.EOF)             // want "fmt.Sprint can be replaced with io.EOF.Error()"
-	fmt.Sprintf("%s", err)         // want "fmt.Sprintf can be replaced with err.Error()"
-	fmt.Sprintf("%v", err)         // want "fmt.Sprintf can be replaced with err.Error()"
-	fmt.Sprint(err)                // want "fmt.Sprint can be replaced with err.Error()"
+	fmt.Sprintf("%s", errSentinel) // want "fmt.Sprintf can be replaced with faster errSentinel.Error()"
+	fmt.Sprintf("%v", errSentinel) // want "fmt.Sprintf can be replaced with faster errSentinel.Error()"
+	fmt.Sprint(errSentinel)        // want "fmt.Sprint can be replaced with faster errSentinel.Error()"
+	fmt.Sprintf("%s", io.EOF)      // want "fmt.Sprintf can be replaced with faster io.EOF.Error()"
+	fmt.Sprintf("%v", io.EOF)      // want "fmt.Sprintf can be replaced with faster io.EOF.Error()"
+	fmt.Sprint(io.EOF)             // want "fmt.Sprint can be replaced with faster io.EOF.Error()"
+	fmt.Sprintf("%s", err)         // want "fmt.Sprintf can be replaced with faster err.Error()"
+	fmt.Sprintf("%v", err)         // want "fmt.Sprintf can be replaced with faster err.Error()"
+	fmt.Sprint(err)                // want "fmt.Sprint can be replaced with faster err.Error()"
 
 	var b bool
 	fmt.Sprintf("%t", true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
@@ -140,8 +140,8 @@ func suggestedFixesTest() {
 		return fmt.Sprintf("%s", "replace me") // want "fmt.Sprintf can be replaced with just using the string"
 	}
 
-	fmt.Println(fmt.Sprint(errSentinel))        // want "fmt.Sprint can be replaced with errSentinel.Error()"
-	fmt.Println(fmt.Sprintf("%s", errSentinel)) // want "fmt.Sprintf can be replaced with errSentinel.Error()"
+	fmt.Println(fmt.Sprint(errSentinel))        // want "fmt.Sprint can be replaced with faster errSentinel.Error()"
+	fmt.Println(fmt.Sprintf("%s", errSentinel)) // want "fmt.Sprintf can be replaced with faster errSentinel.Error()"
 
 	_ = func() string {
 		switch 42 {

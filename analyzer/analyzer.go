@@ -162,18 +162,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			removedFmtUsages[fname]++
 			if fn == "fmt.Errorf" {
 				neededPackages[fname]["errors"] = struct{}{}
-				d = newAnalysisDiagnostic(
+				d = newFasterFunctionReplacementDiagnostic(
 					"", // TODO: precise checker
 					call,
-					fn+" can be replaced with errors.New",
-					[]analysis.SuggestedFix{
+					fn,
+					"errors.New",
+					[]analysis.TextEdit{
 						{
-							Message: "Use errors.New",
-							TextEdits: []analysis.TextEdit{{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("errors.New("),
-							}},
+							Pos:     call.Pos(),
+							End:     value.Pos(),
+							NewText: []byte("errors.New("),
 						},
 					},
 				)
@@ -200,18 +198,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with "+errMethodCall,
-				[]analysis.SuggestedFix{
+				fn,
+				errMethodCall,
+				[]analysis.TextEdit{
 					{
-						Message: "Use " + errMethodCall,
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     call.End(),
-							NewText: []byte(errMethodCall),
-						}},
+						Pos:     call.Pos(),
+						End:     call.End(),
+						NewText: []byte(errMethodCall),
 					},
 				},
 			)
@@ -223,18 +219,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.FormatBool",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.FormatBool",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.FormatBool",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     value.Pos(),
-							NewText: []byte("strconv.FormatBool("),
-						}},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.FormatBool("),
 					},
 				},
 			)
@@ -251,25 +245,21 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["encoding/hex"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster hex.EncodeToString",
-				[]analysis.SuggestedFix{
+				fn,
+				"hex.EncodeToString",
+				[]analysis.TextEdit{
 					{
-						Message: "Use hex.EncodeToString",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("hex.EncodeToString("),
-							},
-							{
-								Pos:     value.End(),
-								End:     value.End(),
-								NewText: []byte("[:]"),
-							},
-						},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("hex.EncodeToString("),
+					},
+					{
+						Pos:     value.End(),
+						End:     value.End(),
+						NewText: []byte("[:]"),
 					},
 				},
 			)
@@ -280,18 +270,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["encoding/hex"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster hex.EncodeToString",
-				[]analysis.SuggestedFix{
+				fn,
+				"hex.EncodeToString",
+				[]analysis.TextEdit{
 					{
-						Message: "Use hex.EncodeToString",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     value.Pos(),
-							NewText: []byte("hex.EncodeToString("),
-						}},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("hex.EncodeToString("),
 					},
 				},
 			)
@@ -303,25 +291,21 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.Itoa",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.Itoa",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.Itoa",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("strconv.Itoa(int("),
-							},
-							{
-								Pos:     value.End(),
-								End:     value.End(),
-								NewText: []byte(")"),
-							},
-						},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.Itoa(int("),
+					},
+					{
+						Pos:     value.End(),
+						End:     value.End(),
+						NewText: []byte(")"),
 					},
 				},
 			)
@@ -332,18 +316,16 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.Itoa",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.Itoa",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.Itoa",
-						TextEdits: []analysis.TextEdit{{
-							Pos:     call.Pos(),
-							End:     value.Pos(),
-							NewText: []byte("strconv.Itoa("),
-						}},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.Itoa("),
 					},
 				},
 			)
@@ -354,25 +336,21 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.FormatInt",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.FormatInt",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.FormatInt",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("strconv.FormatInt("),
-							},
-							{
-								Pos:     value.End(),
-								End:     value.End(),
-								NewText: []byte(", 10"),
-							},
-						},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.FormatInt("),
+					},
+					{
+						Pos:     value.End(),
+						End:     value.End(),
+						NewText: []byte(", 10"),
 					},
 				},
 			)
@@ -388,25 +366,21 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.FormatUint",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.FormatUint",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.FormatUint",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("strconv.FormatUint(uint64("),
-							},
-							{
-								Pos:     value.End(),
-								End:     value.End(),
-								NewText: base,
-							},
-						},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.FormatUint(uint64("),
+					},
+					{
+						Pos:     value.End(),
+						End:     value.End(),
+						NewText: base,
 					},
 				},
 			)
@@ -421,25 +395,21 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			neededPackages[fname]["strconv"] = struct{}{}
-			d = newAnalysisDiagnostic(
+			d = newFasterFunctionReplacementDiagnostic(
 				"", // TODO: precise checker
 				call,
-				fn+" can be replaced with faster strconv.FormatUint",
-				[]analysis.SuggestedFix{
+				fn,
+				"strconv.FormatUint",
+				[]analysis.TextEdit{
 					{
-						Message: "Use strconv.FormatUint",
-						TextEdits: []analysis.TextEdit{
-							{
-								Pos:     call.Pos(),
-								End:     value.Pos(),
-								NewText: []byte("strconv.FormatUint("),
-							},
-							{
-								Pos:     value.End(),
-								End:     value.End(),
-								NewText: base,
-							},
-						},
+						Pos:     call.Pos(),
+						End:     value.Pos(),
+						NewText: []byte("strconv.FormatUint("),
+					},
+					{
+						Pos:     value.End(),
+						End:     value.End(),
+						NewText: base,
 					},
 				},
 			)
