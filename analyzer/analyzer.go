@@ -81,7 +81,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 	removedFmtUsages := make(map[string]int)
-	neededPackages := make(map[string]map[string]bool)
+	neededPackages := make(map[string]map[string]struct{})
 
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
@@ -156,13 +156,12 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		switch {
 		case isBasicType(valueType, types.String) && oneOf(verb, "%v", "%s"):
 			fname := pass.Fset.File(call.Pos()).Name()
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
 			removedFmtUsages[fname]++
 			if fn == "fmt.Errorf" {
-				neededPackages[fname]["errors"] = true
+				neededPackages[fname]["errors"] = struct{}{}
 				d = newAnalysisDiagnostic(
 					"", // TODO: precise checker
 					call,
@@ -220,11 +219,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.Bool) && oneOf(verb, "%v", "%t"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -249,11 +247,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["encoding/hex"] = true
+			neededPackages[fname]["encoding/hex"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -279,11 +276,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isSlice && isBasicType(s.Elem(), types.Uint8) && oneOf(verb, "%x"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["encoding/hex"] = true
+			neededPackages[fname]["encoding/hex"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -303,11 +299,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intConv:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -333,11 +328,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -356,11 +350,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d"):
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -391,11 +384,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			}
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -425,11 +417,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			}
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
-			_, ok := neededPackages[fname]
-			if !ok {
-				neededPackages[fname] = make(map[string]bool)
+			if _, ok := neededPackages[fname]; !ok {
+				neededPackages[fname] = make(map[string]struct{})
 			}
-			neededPackages[fname]["strconv"] = true
+			neededPackages[fname]["strconv"] = struct{}{}
 			d = newAnalysisDiagnostic(
 				"", // TODO: precise checker
 				call,
@@ -514,8 +505,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					gd := node.(*ast.ImportSpec)
 					if gd.Path.Value == strconv.Quote(pkg.Path()) {
 						fname := pass.Fset.File(gd.Pos()).Name()
-						_, ok := neededPackages[fname]
-						if ok {
+						if _, ok := neededPackages[fname]; ok {
 							delete(neededPackages[fname], pkg.Path())
 						}
 					}
