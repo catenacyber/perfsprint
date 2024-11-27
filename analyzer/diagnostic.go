@@ -23,3 +23,23 @@ func newAnalysisDiagnostic(
 	}
 	return &d
 }
+
+func newFasterFunctionReplacementDiagnostic(
+	checker string,
+	analysisRange analysis.Range,
+	function string,
+	suggestedFunction string,
+	textEdits []analysis.TextEdit,
+) *analysis.Diagnostic {
+	return newAnalysisDiagnostic(
+		checker,
+		analysisRange,
+		function+" can be replaced with faster "+suggestedFunction,
+		[]analysis.SuggestedFix{
+			{
+				Message:   "Use " + suggestedFunction,
+				TextEdits: textEdits,
+			},
+		},
+	)
+}
