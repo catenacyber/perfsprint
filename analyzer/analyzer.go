@@ -16,8 +16,13 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+type optionInt struct {
+	global  bool
+	intConv bool
+}
+
 type perfSprint struct {
-	intConv    bool
+	intFormat  optionInt
 	errError   bool
 	errorf     bool
 	sprintf1   bool
@@ -27,7 +32,7 @@ type perfSprint struct {
 
 func newPerfSprint() *perfSprint {
 	return &perfSprint{
-		intConv:    true,
+		intFormat:  optionInt{global: true, intConv: true},
 		errError:   false,
 		errorf:     true,
 		sprintf1:   true,
@@ -44,12 +49,14 @@ func New() *analysis.Analyzer {
 		Run:      n.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
-	r.Flags.BoolVar(&n.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
+	r.Flags.BoolVar(&n.intFormat.global, "integer-format", true, "enable/disable optimization of integer formatting")
+	r.Flags.BoolVar(&n.intFormat.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
 	r.Flags.BoolVar(&n.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
 	r.Flags.BoolVar(&n.errorf, "errorf", true, "optimizes fmt.Errorf")
 	r.Flags.BoolVar(&n.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
 	r.Flags.BoolVar(&n.strconcat, "strconcat", true, "optimizes into strings concatenation")
+
 	return r
 }
 
@@ -296,7 +303,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intConv:
+		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intFormat.intConv && n.intFormat.global:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -325,7 +332,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d") && n.intFormat.global:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -347,7 +354,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d"):
+		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d") && n.intFormat.global:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -377,7 +384,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intConv:
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.intConv:
 			base := []byte("), 10")
 			if verb == "%x" {
 				base = []byte("), 16")
@@ -410,7 +417,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x"):
+		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.global:
 			base := []byte(", 10")
 			if verb == "%x" {
 				base = []byte(", 16")
