@@ -27,11 +27,16 @@ type optionErr struct {
 	errorf   bool
 }
 
+type optionStr struct {
+	global    bool
+	sprintf1  bool
+	strconcat bool
+}
+
 type perfSprint struct {
 	intFormat optionInt
 	errFormat optionErr
-	sprintf1  bool
-	strconcat bool
+	strFormat optionStr
 
 	boolFormat bool
 	hexFormat  bool
@@ -42,8 +47,7 @@ func newPerfSprint() *perfSprint {
 	return &perfSprint{
 		intFormat:  optionInt{global: true, intConv: true},
 		errFormat:  optionErr{global: true, errError: false, errorf: true},
-		sprintf1:   true,
-		strconcat:  true,
+		strFormat:  optionStr{global: true, sprintf1: true, strconcat: true},
 		boolFormat: true,
 		hexFormat:  true,
 		fiximports: true,
@@ -65,9 +69,10 @@ func New() *analysis.Analyzer {
 	r.Flags.BoolVar(&n.errFormat.errorf, "errorf", true, "optimizes fmt.Errorf")
 	r.Flags.BoolVar(&n.boolFormat, "bool-format", true, "enable/disable optimization of bool formatting")
 	r.Flags.BoolVar(&n.hexFormat, "hex-format", true, "enable/disable optimization of hex formatting")
-	r.Flags.BoolVar(&n.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
+	r.Flags.BoolVar(&n.strFormat.global, "string-format", true, "enable/disable optimization of string formatting")
+	r.Flags.BoolVar(&n.strFormat.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
+	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", true, "optimizes into strings concatenation")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
-	r.Flags.BoolVar(&n.strconcat, "strconcat", true, "optimizes into strings concatenation")
 
 	return r
 }
@@ -131,7 +136,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			verb = "%v"
 			value = call.Args[0]
 
-		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.sprintf1:
+		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.strFormat.sprintf1:
 			fn = "fmt.Sprintf"
 			verb = "%s"
 			value = call.Args[0]
@@ -160,7 +165,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		switch verb {
 		default:
-			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strconcat {
+			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.strconcat {
 				break
 			}
 			return
@@ -196,7 +201,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				)
-			} else {
+			} else if n.strFormat.global {
 				d = newAnalysisDiagnostic(
 					"", // TODO: precise checker
 					call,
@@ -462,7 +467,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb):
+		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.global:
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
 				fix = strconv.Quote(verb[:len(verb)-2]) + "+" + formatNode(pass.Fset, value)
