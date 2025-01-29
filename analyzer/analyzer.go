@@ -28,11 +28,14 @@ type optionErr struct {
 }
 
 type perfSprint struct {
-	intFormat  optionInt
-	errFormat  optionErr
-	sprintf1   bool
+	intFormat optionInt
+	errFormat optionErr
+	sprintf1  bool
+	strconcat bool
+
+	boolFormat bool
+	hexFormat  bool
 	fiximports bool
-	strconcat  bool
 }
 
 func newPerfSprint() *perfSprint {
@@ -40,8 +43,10 @@ func newPerfSprint() *perfSprint {
 		intFormat:  optionInt{global: true, intConv: true},
 		errFormat:  optionErr{global: true, errError: false, errorf: true},
 		sprintf1:   true,
-		fiximports: true,
 		strconcat:  true,
+		boolFormat: true,
+		hexFormat:  true,
+		fiximports: true,
 	}
 }
 
@@ -58,6 +63,8 @@ func New() *analysis.Analyzer {
 	r.Flags.BoolVar(&n.errFormat.global, "error-format", true, "enable/disable optimization of error formatting")
 	r.Flags.BoolVar(&n.errFormat.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
 	r.Flags.BoolVar(&n.errFormat.errorf, "errorf", true, "optimizes fmt.Errorf")
+	r.Flags.BoolVar(&n.boolFormat, "bool-format", true, "enable/disable optimization of bool formatting")
+	r.Flags.BoolVar(&n.hexFormat, "hex-format", true, "enable/disable optimization of hex formatting")
 	r.Flags.BoolVar(&n.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
 	r.Flags.BoolVar(&n.strconcat, "strconcat", true, "optimizes into strings concatenation")
@@ -228,7 +235,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Bool) && oneOf(verb, "%v", "%t"):
+		case isBasicType(valueType, types.Bool) && oneOf(verb, "%v", "%t") && n.boolFormat:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -251,7 +258,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isArray && isBasicType(a.Elem(), types.Uint8) && oneOf(verb, "%x"):
+		case isArray && isBasicType(a.Elem(), types.Uint8) && oneOf(verb, "%x") && n.hexFormat:
 			if _, ok := value.(*ast.Ident); !ok {
 				// Doesn't support array literals.
 				return
@@ -285,7 +292,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isSlice && isBasicType(s.Elem(), types.Uint8) && oneOf(verb, "%x"):
+		case isSlice && isBasicType(s.Elem(), types.Uint8) && oneOf(verb, "%x") && n.hexFormat:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
