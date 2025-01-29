@@ -2,6 +2,7 @@ package analyzer_test
 
 import (
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"io"
 	"strconv"
@@ -14,31 +15,29 @@ import (
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
 	a := analyzer.New()
-	err := a.Flags.Set("err-error", "true")
-	if err != nil {
-		t.Fatalf("failed to set err-error flag")
-	}
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "p")
-}
+	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "default")
+	a.Flags.VisitAll(func(f *flag.Flag) {
+		if f.Name != "fiximports" {
+			t.Run(f.Name, func(t *testing.T) {
+				changedVal := "false"
+				if f.DefValue == "false" {
+					changedVal = "true"
+				} else if f.DefValue != "true" {
+					t.Fatalf("default value neither false or true")
+				}
+				err := a.Flags.Set(f.Name, changedVal)
+				if err != nil {
+					t.Fatalf("failed to set err-error flag")
+				}
+				analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, f.Name)
+				err = a.Flags.Set(f.Name, f.DefValue)
+				if err != nil {
+					t.Fatalf("failed to set err-error flag")
+				}
+			})
+		}
+	})
 
-func TestAnalyzerNoErrError(t *testing.T) {
-	t.Parallel()
-	a := analyzer.New()
-	err := a.Flags.Set("err-error", "false")
-	if err != nil {
-		t.Fatalf("failed to set err-error flag")
-	}
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "nilerror")
-}
-
-func TestAnalyzerNoConv(t *testing.T) {
-	t.Parallel()
-	a := analyzer.New()
-	err := a.Flags.Set("int-conversion", "false")
-	if err != nil {
-		t.Fatalf("failed to set int-conversion flag")
-	}
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "noconv")
 }
 
 func TestReplacements(t *testing.T) {

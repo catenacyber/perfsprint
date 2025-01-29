@@ -17,7 +17,23 @@ go install github.com/catenacyber/perfsprint@latest
 perfsprint --fix ./...
 ```
 
-To disable int/uint cast, you can use the flag `-int-conversion=false`
+## Options
+
+The 5 following options cover all optimizations proposed by the linter.
+
+Some have suboptions for specific cases.
+
+- integer-format (formatting integer with the package `strconv`)
+    - int-conversion : disable when the optimization adds a int/uint cast (readability)
+- error-format (formatting errors)
+    - errorf : known behavior change avoiding panic
+    - err-error : known behavior change panicking for nil errors
+- string-format (formatting strings)
+   - sprintf1 : known behavior change avoiding panic
+   - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
+- bool-format (formatting bool with `strconv.FormatBool`)
+- hex-format (formatting slices with `hex.EncodeToString`)
+
 
 To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`
 This optimization is not always equivalent.
