@@ -17,18 +17,18 @@ import (
 )
 
 type optionInt struct {
-	enabled  bool
+	enabled bool
 	intConv bool
 }
 
 type optionErr struct {
-	enabled   bool
+	enabled  bool
 	errError bool
 	errorf   bool
 }
 
 type optionStr struct {
-	enabled    bool
+	enabled   bool
 	sprintf1  bool
 	strconcat bool
 }
@@ -73,6 +73,19 @@ func New() *analysis.Analyzer {
 	r.Flags.BoolVar(&n.strFormat.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", true, "optimizes into strings concatenation")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
+
+	if !n.intFormat.enabled {
+		n.intFormat.intConv = false
+	}
+
+	if !n.errFormat.enabled {
+		n.errFormat.errError = false
+		n.errFormat.errorf = false
+	}
+	if !n.strFormat.enabled {
+		n.strFormat.sprintf1 = false
+		n.strFormat.strconcat = false
+	}
 
 	return r
 }
