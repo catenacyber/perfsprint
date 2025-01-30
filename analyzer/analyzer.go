@@ -18,19 +18,19 @@ import (
 
 type optionInt struct {
 	deactivated bool
-	intConv bool
+	intConv     bool
 }
 
 type optionErr struct {
-	deactivated  bool
-	errError bool
-	errorf   bool
+	deactivated bool
+	errError    bool
+	errorf      bool
 }
 
 type optionStr struct {
-	deactivated   bool
-	sprintf1  bool
-	strconcat bool
+	deactivated bool
+	sprintf1    bool
+	strconcat   bool
 }
 
 type perfSprint struct {
