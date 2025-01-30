@@ -17,18 +17,18 @@ import (
 )
 
 type optionInt struct {
-	global  bool
+	enabled  bool
 	intConv bool
 }
 
 type optionErr struct {
-	global   bool
+	enabled   bool
 	errError bool
 	errorf   bool
 }
 
 type optionStr struct {
-	global    bool
+	enabled    bool
 	sprintf1  bool
 	strconcat bool
 }
@@ -45,9 +45,9 @@ type perfSprint struct {
 
 func newPerfSprint() *perfSprint {
 	return &perfSprint{
-		intFormat:  optionInt{global: true, intConv: true},
-		errFormat:  optionErr{global: true, errError: false, errorf: true},
-		strFormat:  optionStr{global: true, sprintf1: true, strconcat: true},
+		intFormat:  optionInt{enabled: true, intConv: true},
+		errFormat:  optionErr{enabled: true, errError: false, errorf: true},
+		strFormat:  optionStr{enabled: true, sprintf1: true, strconcat: true},
 		boolFormat: true,
 		hexFormat:  true,
 		fiximports: true,
@@ -62,14 +62,14 @@ func New() *analysis.Analyzer {
 		Run:      n.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
-	r.Flags.BoolVar(&n.intFormat.global, "integer-format", true, "enable/disable optimization of integer formatting")
+	r.Flags.BoolVar(&n.intFormat.enabled, "integer-format", true, "enable/disable optimization of integer formatting")
 	r.Flags.BoolVar(&n.intFormat.intConv, "int-conversion", true, "optimizes even if it requires an int or uint type cast")
-	r.Flags.BoolVar(&n.errFormat.global, "error-format", true, "enable/disable optimization of error formatting")
+	r.Flags.BoolVar(&n.errFormat.enabled, "error-format", true, "enable/disable optimization of error formatting")
 	r.Flags.BoolVar(&n.errFormat.errError, "err-error", false, "optimizes into err.Error() even if it is only equivalent for non-nil errors")
 	r.Flags.BoolVar(&n.errFormat.errorf, "errorf", true, "optimizes fmt.Errorf")
 	r.Flags.BoolVar(&n.boolFormat, "bool-format", true, "enable/disable optimization of bool formatting")
 	r.Flags.BoolVar(&n.hexFormat, "hex-format", true, "enable/disable optimization of hex formatting")
-	r.Flags.BoolVar(&n.strFormat.global, "string-format", true, "enable/disable optimization of string formatting")
+	r.Flags.BoolVar(&n.strFormat.enabled, "string-format", true, "enable/disable optimization of string formatting")
 	r.Flags.BoolVar(&n.strFormat.sprintf1, "sprintf1", true, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", true, "optimizes into strings concatenation")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
@@ -126,7 +126,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			err   error
 		)
 		switch {
-		case calledObj == fmtErrorfObj && len(call.Args) == 1 && n.errFormat.errorf && n.errFormat.global:
+		case calledObj == fmtErrorfObj && len(call.Args) == 1 && n.errFormat.errorf && n.errFormat.enabled:
 			fn = "fmt.Errorf"
 			verb = "%s"
 			value = call.Args[0]
@@ -184,7 +184,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				neededPackages[fname] = make(map[string]struct{})
 			}
 			removedFmtUsages[fname]++
-			if fn == "fmt.Errorf" && n.errFormat.global {
+			if fn == "fmt.Errorf" && n.errFormat.enabled {
 				neededPackages[fname]["errors"] = struct{}{}
 				d = newAnalysisDiagnostic(
 					"", // TODO: precise checker
@@ -201,7 +201,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						},
 					},
 				)
-			} else if n.strFormat.global {
+			} else if n.strFormat.enabled {
 				d = newAnalysisDiagnostic(
 					"", // TODO: precise checker
 					call,
@@ -218,7 +218,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				)
 			}
-		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errFormat.errError && n.errFormat.global:
+		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errFormat.errError && n.errFormat.enabled:
 			// known false positive if this error is nil
 			// fmt.Sprint(nil) does not panic like nil.Error() does
 			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
@@ -320,7 +320,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intFormat.intConv && n.intFormat.global:
+		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intFormat.intConv && n.intFormat.enabled:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -349,7 +349,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d") && n.intFormat.global:
+		case isBasicType(valueType, types.Int) && oneOf(verb, "%v", "%d") && n.intFormat.enabled:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -371,7 +371,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d") && n.intFormat.global:
+		case isBasicType(valueType, types.Int64) && oneOf(verb, "%v", "%d") && n.intFormat.enabled:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -434,7 +434,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.global:
+		case isBasicType(valueType, types.Uint64) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.enabled:
 			base := []byte(", 10")
 			if verb == "%x" {
 				base = []byte(", 16")
@@ -467,7 +467,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				},
 			)
-		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.global:
+		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.enabled:
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
 				fix = strconv.Quote(verb[:len(verb)-2]) + "+" + formatNode(pass.Fset, value)
