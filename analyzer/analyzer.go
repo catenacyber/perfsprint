@@ -139,7 +139,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			err   error
 		)
 		switch {
-		case calledObj == fmtErrorfObj && len(call.Args) == 1 && n.errFormat.errorf && n.errFormat.enabled:
+		case calledObj == fmtErrorfObj && len(call.Args) == 1 && n.errFormat.errorf:
 			fn = "fmt.Errorf"
 			verb = "%s"
 			value = call.Args[0]
@@ -149,7 +149,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			verb = "%v"
 			value = call.Args[0]
 
-		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.strFormat.sprintf1 && n.strFormat.enabled:
+		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.strFormat.sprintf1:
 			fn = "fmt.Sprintf"
 			verb = "%s"
 			value = call.Args[0]
@@ -178,7 +178,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		switch verb {
 		default:
-			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.strconcat && n.strFormat.enabled {
+			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.strconcat {
 				break
 			}
 			return
@@ -231,7 +231,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 					},
 				)
 			}
-		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errFormat.errError && n.errFormat.enabled:
+		case types.Implements(valueType, errIface) && oneOf(verb, "%v", "%s") && n.errFormat.errError:
 			// known false positive if this error is nil
 			// fmt.Sprint(nil) does not panic like nil.Error() does
 			errMethodCall := formatNode(pass.Fset, value) + ".Error()"
@@ -333,7 +333,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intFormat.intConv && n.intFormat.enabled:
+		case isBasicType(valueType, types.Int8, types.Int16, types.Int32) && oneOf(verb, "%v", "%d") && n.intFormat.intConv:
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++
 			if _, ok := neededPackages[fname]; !ok {
@@ -414,7 +414,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.intConv && n.intFormat.enabled:
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.intConv:
 			base := []byte("), 10")
 			if verb == "%x" {
 				base = []byte("), 16")
