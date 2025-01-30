@@ -136,7 +136,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 			verb = "%v"
 			value = call.Args[0]
 
-		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.strFormat.sprintf1:
+		case calledObj == fmtSprintfObj && len(call.Args) == 1 && n.strFormat.sprintf1 && n.strFormat.enabled:
 			fn = "fmt.Sprintf"
 			verb = "%s"
 			value = call.Args[0]
@@ -165,7 +165,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 
 		switch verb {
 		default:
-			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.strconcat {
+			if fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.strconcat && n.strFormat.enabled {
 				break
 			}
 			return
@@ -401,7 +401,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 				},
 			)
 
-		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.intConv:
+		case isBasicType(valueType, types.Uint8, types.Uint16, types.Uint32, types.Uint) && oneOf(verb, "%v", "%d", "%x") && n.intFormat.intConv && n.intFormat.enabled:
 			base := []byte("), 10")
 			if verb == "%x" {
 				base = []byte("), 16")
