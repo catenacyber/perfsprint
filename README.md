@@ -32,7 +32,7 @@ Some have suboptions for specific cases.
    - sprintf1 : known behavior change avoiding panic
    - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
 - bool-format (formatting bool with `strconv.FormatBool`)
-- hex-format (formatting slices with `hex.EncodeToString`)
+- hex-format (formatting bytes with `hex.EncodeToString`)
 
 
 To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`

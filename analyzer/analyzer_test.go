@@ -17,25 +17,26 @@ func TestAnalyzer(t *testing.T) {
 	a := analyzer.New()
 	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "default")
 	a.Flags.VisitAll(func(f *flag.Flag) {
-		if f.Name != "fiximports" {
-			t.Run(f.Name, func(t *testing.T) {
-				changedVal := "false"
-				if f.DefValue == "false" {
-					changedVal = "true"
-				} else if f.DefValue != "true" {
-					t.Fatalf("default value neither false or true")
-				}
-				err := a.Flags.Set(f.Name, changedVal)
-				if err != nil {
-					t.Fatalf("failed to set err-error flag")
-				}
-				analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, f.Name)
-				err = a.Flags.Set(f.Name, f.DefValue)
-				if err != nil {
-					t.Fatalf("failed to set err-error flag")
-				}
-			})
+		if f.Name == "fiximports" {
+			return
 		}
+		t.Run(f.Name, func(t *testing.T) {
+			changedVal := "false"
+			if f.DefValue == "false" {
+				changedVal = "true"
+			} else if f.DefValue != "true" {
+				t.Fatalf("default value neither false or true")
+			}
+			err := a.Flags.Set(f.Name, changedVal)
+			if err != nil {
+				t.Fatalf("failed to set %q flag", f.Name)
+			}
+			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, f.Name)
+			err = a.Flags.Set(f.Name, f.DefValue)
+			if err != nil {
+				t.Fatalf("failed to set %q flag", f.Name)
+			}
+		})
 	})
 
 }
