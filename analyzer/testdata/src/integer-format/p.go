@@ -68,24 +68,24 @@ func positive() {
 	fmt.Sprintf("%d", 42)
 	fmt.Sprintf("%v", 42)
 	fmt.Sprint(42)
-	fmt.Sprintf("%d", i8)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i8)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i8)               // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int8(42))  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int8(42))  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int8(42))         // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i16)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i16)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i16)              // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int16(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int16(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int16(42))        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i32)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i32)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i32)              // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int32(42))        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i8)
+	fmt.Sprintf("%v", i8)
+	fmt.Sprint(i8)
+	fmt.Sprintf("%d", int8(42))
+	fmt.Sprintf("%v", int8(42))
+	fmt.Sprint(int8(42))
+	fmt.Sprintf("%d", i16)
+	fmt.Sprintf("%v", i16)
+	fmt.Sprint(i16)
+	fmt.Sprintf("%d", int16(42))
+	fmt.Sprintf("%v", int16(42))
+	fmt.Sprint(int16(42))
+	fmt.Sprintf("%d", i32)
+	fmt.Sprintf("%v", i32)
+	fmt.Sprint(i32)
+	fmt.Sprintf("%d", int32(42))
+	fmt.Sprintf("%v", int32(42))
+	fmt.Sprint(int32(42))
 	fmt.Sprintf("%d", i64)
 	fmt.Sprintf("%v", i64)
 	fmt.Sprint(i64)
@@ -98,34 +98,34 @@ func positive() {
 	var ui16 uint16
 	var ui32 uint32
 	var ui64 uint64
-	fmt.Sprintf("%d", ui)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui)                // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint(42))          // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui8)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui8)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui8)               // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint8(42))  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint8(42))  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint8(42))         // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui16)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui16)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui16)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint16(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint16(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint16(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui32)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui32)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui32)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint32(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint32(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint32(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui)
+	fmt.Sprintf("%v", ui)
+	fmt.Sprint(ui)
+	fmt.Sprintf("%d", uint(42))
+	fmt.Sprintf("%v", uint(42))
+	fmt.Sprint(uint(42))
+	fmt.Sprintf("%d", ui8)
+	fmt.Sprintf("%v", ui8)
+	fmt.Sprint(ui8)
+	fmt.Sprintf("%d", uint8(42))
+	fmt.Sprintf("%v", uint8(42))
+	fmt.Sprint(uint8(42))
+	fmt.Sprintf("%d", ui16)
+	fmt.Sprintf("%v", ui16)
+	fmt.Sprint(ui16)
+	fmt.Sprintf("%d", uint16(42))
+	fmt.Sprintf("%v", uint16(42))
+	fmt.Sprint(uint16(42))
+	fmt.Sprintf("%d", ui32)
+	fmt.Sprintf("%v", ui32)
+	fmt.Sprint(ui32)
+	fmt.Sprintf("%d", uint32(42))
+	fmt.Sprintf("%v", uint32(42))
+	fmt.Sprint(uint32(42))
 	fmt.Sprintf("%d", ui64)
 	fmt.Sprintf("%v", ui64)
 	fmt.Sprintf("%x", ui64)
-	fmt.Sprintf("%x", uint(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", uint(42))
 	fmt.Sprint(ui64)
 	fmt.Sprintf("%d", uint64(42))
 	fmt.Sprintf("%v", uint64(42))
@@ -171,8 +171,8 @@ func suggestedFixesTest() {
 	var change struct{ User struct{ ID uint } }
 	var userStr string
 	if id := change.User.ID; id != 0 {
-		userStr = fmt.Sprintf("%d", id) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-		userStr = fmt.Sprint(id)        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+		userStr = fmt.Sprintf("%d", id)
+		userStr = fmt.Sprint(id)
 	}
 	_ = userStr
 }
