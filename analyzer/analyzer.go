@@ -74,10 +74,26 @@ func New() *analysis.Analyzer {
 	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", true, "optimizes into strings concatenation")
 	r.Flags.BoolVar(&n.fiximports, "fiximports", true, "fix needed imports from other fixes")
 
+	return r
+}
+
+// true if verb is a format string that could be replaced with concatenation.
+func isConcatable(verb string) bool {
+	hasPrefix := (strings.HasPrefix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
+		(strings.HasPrefix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
+	hasSuffix := (strings.HasSuffix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
+		(strings.HasSuffix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
+
+	if strings.Count(verb, "%[1]s") > 1 {
+		return false
+	}
+	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
+}
+
+func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	if !n.intFormat.enabled {
 		n.intFormat.intConv = false
 	}
-
 	if !n.errFormat.enabled {
 		n.errFormat.errError = false
 		n.errFormat.errorf = false
@@ -87,25 +103,6 @@ func New() *analysis.Analyzer {
 		n.strFormat.strconcat = false
 	}
 
-	return r
-}
-
-// true if verb is a format string that could be replaced with concatenation.
-func isConcatable(verb string) bool {
-	hasPrefix :=
-		(strings.HasPrefix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
-			(strings.HasPrefix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
-	hasSuffix :=
-		(strings.HasSuffix(verb, "%s") && !strings.Contains(verb, "%[1]s")) ||
-			(strings.HasSuffix(verb, "%[1]s") && !strings.Contains(verb, "%s"))
-
-	if strings.Count(verb, "%[1]s") > 1 {
-		return false
-	}
-	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
-}
-
-func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	var fmtSprintObj, fmtSprintfObj, fmtErrorfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
