@@ -14,31 +14,38 @@ import (
 
 func TestAnalyzer(t *testing.T) {
 	t.Parallel()
-	a := analyzer.New()
-	analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "default")
-	a.Flags.VisitAll(func(f *flag.Flag) {
+
+	t.Run("default", func(t *testing.T) {
+		a := analyzer.New()
+		analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, "default")
+	})
+
+	defaultAnalyzer := analyzer.New()
+	defaultAnalyzer.Flags.VisitAll(func(f *flag.Flag) {
 		if f.Name == "fiximports" {
+			// fiximports is a special case, let's skip it
 			return
 		}
+
+		var changedVal string
+		switch f.DefValue {
+		case "false":
+			changedVal = "true"
+		case "true":
+			changedVal = "false"
+		default:
+			t.Fatalf("default value neither false or true")
+		}
+
 		t.Run(f.Name, func(t *testing.T) {
-			changedVal := "false"
-			if f.DefValue == "false" {
-				changedVal = "true"
-			} else if f.DefValue != "true" {
-				t.Fatalf("default value neither false or true")
-			}
+			a := analyzer.New()
 			err := a.Flags.Set(f.Name, changedVal)
 			if err != nil {
 				t.Fatalf("failed to set %q flag", f.Name)
 			}
 			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, f.Name)
-			err = a.Flags.Set(f.Name, f.DefValue)
-			if err != nil {
-				t.Fatalf("failed to set %q flag", f.Name)
-			}
 		})
 	})
-
 }
 
 func TestReplacements(t *testing.T) {
