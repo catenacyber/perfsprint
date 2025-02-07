@@ -1,14 +1,63 @@
-package noconv
+package p
 
 import (
 	"errors"
 	"fmt" // want "Fix imports"
+	"io"
+	"log"
+	"net/url"
 	"os"
+	"strconv"
+	"time"
 )
 
 var errSentinel = errors.New("connection refused")
 
 func positive() {
+	var s string
+	fmt.Sprintf("%s", "hello") // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%v", "hello") // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("hello")       // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprint("hello")        // want "fmt.Sprint can be replaced with just using the string"
+	fmt.Sprintf("%s", s)       // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%[1]s", s)    // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%v", s)       // want "fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
+	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
+
+	fmt.Sprintf("Hello %s", s)         // want "fmt.Sprintf can be replaced with string concatenation"
+	fmt.Sprintf("%s says Hello", s)    // want "fmt.Sprintf can be replaced with string concatenation"
+	fmt.Sprintf("Hello says %[1]s", s) // want "fmt.Sprintf can be replaced with string concatenation"
+
+	var err error
+	fmt.Sprintf("%s", errSentinel)
+	fmt.Sprintf("%v", errSentinel)
+	fmt.Sprint(errSentinel)
+	fmt.Sprintf("%s", io.EOF)
+	fmt.Sprintf("%v", io.EOF)
+	fmt.Sprint(io.EOF)
+	fmt.Sprintf("%s", err)
+	fmt.Sprintf("%v", err)
+	fmt.Sprint(err)
+
+	var b bool
+	fmt.Sprintf("%t", true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(true)         // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%t", false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(false)        // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%t", b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(b)            // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+
+	var bs []byte
+	var ba [3]byte
+	fmt.Sprintf("%x", []byte{'a'})  // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", []uint8{'b'}) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", bs)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", ba)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+
 	var i int
 	var i8 int8
 	var i16 int16
@@ -74,12 +123,59 @@ func positive() {
 	fmt.Sprintf("%d", uint32(42))
 	fmt.Sprintf("%v", uint32(42))
 	fmt.Sprint(uint32(42))
-	fmt.Sprintf("%d", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui64) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui64) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", ui64) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", uint(42))
 	fmt.Sprint(ui64)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%d", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprintf("%v", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
 	fmt.Sprint(uint64(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+}
+
+func suggestedFixesTest() {
+	_ = func() string {
+		if false {
+			return fmt.Sprint("replace me") // want "fmt.Sprint can be replaced with just using the string"
+		}
+		return fmt.Sprintf("%s", "replace me") // want "fmt.Sprintf can be replaced with just using the string"
+	}
+
+	fmt.Println(fmt.Sprint(errSentinel))
+	fmt.Println(fmt.Sprintf("%s", errSentinel))
+
+	_ = func() string {
+		switch 42 {
+		case 1:
+			return fmt.Sprint(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+		case 2:
+			return fmt.Sprintf("%t", true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+		}
+		return ""
+	}
+
+	var offset int
+	params := url.Values{}
+	params.Set("offset", strconv.Itoa(offset))
+	params.Set("offset", strconv.Itoa(offset))
+
+	var pubKey []byte
+	if verifyPubKey := true; verifyPubKey {
+		log.Println("pubkey=" + fmt.Sprintf("%x", pubKey)) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	}
+
+	var metaHash [16]byte
+	fn := fmt.Sprintf("%s.%x", "coverage.MetaFilePref", metaHash)
+	_ = "tmp." + fn + fmt.Sprintf("%d", time.Now().UnixNano()) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	_ = "tmp." + fn + fmt.Sprint(time.Now().UnixNano())        // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
+
+	var change struct{ User struct{ ID uint } }
+	var userStr string
+	if id := change.User.ID; id != 0 {
+		userStr = fmt.Sprintf("%d", id)
+		userStr = fmt.Sprint(id)
+	}
+	_ = userStr
 }
 
 func negative() {
@@ -94,6 +190,7 @@ func negative() {
 	fmt.Printf("%v")
 	fmt.Printf("%d", 42)
 	fmt.Printf("%s %d", "hello", 42)
+	fmt.Errorf("this is %s", "complex")
 
 	fmt.Fprint(os.Stdout, "%d", 42)
 	fmt.Fprintf(os.Stdout, "test")
@@ -115,6 +212,8 @@ func negative() {
 	fmt.Sprintf("%3d", 42)
 	fmt.Sprintf("% d", 42)
 	fmt.Sprintf("%-10d", 42)
+	fmt.Sprintf("%s %[1]s", "hello")
+	fmt.Sprintf("%[1]s %[1]s", "hello")
 	fmt.Sprintf("%[2]d %[1]d\n", 11, 22)
 	fmt.Sprintf("%[3]*.[2]*[1]f", 12.0, 2, 6)
 	fmt.Sprintf("%d %d %#[1]x %#x", 16, 17)
