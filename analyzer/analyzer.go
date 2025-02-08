@@ -58,6 +58,7 @@ func New() *analysis.Analyzer {
 	n := newPerfSprint()
 	r := &analysis.Analyzer{
 		Name:     "perfsprint",
+		URL:      "https://github.com/catenacyber/perfsprint",
 		Doc:      "Checks that fmt.Sprintf can be replaced with a faster alternative.",
 		Run:      n.run,
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
