@@ -27,23 +27,26 @@ func TestAnalyzer(t *testing.T) {
 			return
 		}
 
+		name := f.Name
 		var changedVal string
 		switch f.DefValue {
 		case "false":
 			changedVal = "true"
+			name = "with-" + f.Name
 		case "true":
 			changedVal = "false"
+			name = "without-" + f.Name
 		default:
 			t.Fatalf("default value neither false or true")
 		}
 
-		t.Run(f.Name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			a := analyzer.New()
 			err := a.Flags.Set(f.Name, changedVal)
 			if err != nil {
 				t.Fatalf("failed to set %q flag", f.Name)
 			}
-			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, f.Name)
+			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, name)
 		})
 	})
 }
