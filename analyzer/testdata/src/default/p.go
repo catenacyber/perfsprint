@@ -14,19 +14,19 @@ var errSentinel = errors.New("connection refused")
 
 func positive() {
 	var s string
-	fmt.Sprintf("%s", "hello") // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprintf("%v", "hello") // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprintf("hello")       // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprint("hello")        // want "fmt.Sprint can be replaced with just using the string"
-	fmt.Sprintf("%s", s)       // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprintf("%[1]s", s)    // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprintf("%v", s)       // want "fmt.Sprintf can be replaced with just using the string"
-	fmt.Sprint(s)              // want "fmt.Sprint can be replaced with just using the string"
-	fmt.Errorf("hello")        // want "fmt.Errorf can be replaced with errors.New"
+	fmt.Sprintf("%s", "hello") // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%v", "hello") // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("hello")       // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprint("hello")        // want "string-format: fmt.Sprint can be replaced with just using the string"
+	fmt.Sprintf("%s", s)       // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%[1]s", s)    // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprintf("%v", s)       // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	fmt.Sprint(s)              // want "string-format: fmt.Sprint can be replaced with just using the string"
+	fmt.Errorf("hello")        // want "error-format: fmt.Errorf can be replaced with errors.New"
 
-	fmt.Sprintf("Hello %s", s)         // want "fmt.Sprintf can be replaced with string concatenation"
-	fmt.Sprintf("%s says Hello", s)    // want "fmt.Sprintf can be replaced with string concatenation"
-	fmt.Sprintf("Hello says %[1]s", s) // want "fmt.Sprintf can be replaced with string concatenation"
+	fmt.Sprintf("Hello %s", s)         // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+	fmt.Sprintf("%s says Hello", s)    // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+	fmt.Sprintf("Hello says %[1]s", s) // want "string-format: fmt.Sprintf can be replaced with string concatenation"
 
 	var err error
 	fmt.Sprintf("%s", errSentinel)
@@ -40,104 +40,104 @@ func positive() {
 	fmt.Sprint(err)
 
 	var b bool
-	fmt.Sprintf("%t", true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprintf("%v", true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprint(true)         // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
-	fmt.Sprintf("%t", false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprintf("%v", false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprint(false)        // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
-	fmt.Sprintf("%t", b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprintf("%v", b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	fmt.Sprint(b)            // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%t", true)  // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", true)  // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(true)         // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%t", false) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", false) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(false)        // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%t", b)     // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprintf("%v", b)     // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	fmt.Sprint(b)            // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
 
 	var bs []byte
 	var ba [3]byte
-	fmt.Sprintf("%x", []byte{'a'})  // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	fmt.Sprintf("%x", []uint8{'b'}) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	fmt.Sprintf("%x", bs)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	fmt.Sprintf("%x", ba)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", []byte{'a'})  // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", []uint8{'b'}) // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", bs)           // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	fmt.Sprintf("%x", ba)           // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
 
 	var i int
 	var i8 int8
 	var i16 int16
 	var i32 int32
 	var i64 int64
-	fmt.Sprintf("%d", i)         // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i)         // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i)                // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", 42)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", 42)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(42)               // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i8)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i8)        // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i8)               // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int8(42))  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int8(42))  // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int8(42))         // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i16)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i16)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i16)              // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int16(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int16(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int16(42))        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i32)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", i32)       // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(i32)              // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%v", int32(42)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	fmt.Sprint(int32(42))        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
-	fmt.Sprintf("%d", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%v", i64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprint(i64)              // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%d", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprintf("%v", int64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	fmt.Sprint(int64(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%d", i)         // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", i)         // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(i)                // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", 42)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", 42)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(42)               // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i8)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", i8)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(i8)               // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", int8(42))  // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", int8(42))  // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(int8(42))         // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i16)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", i16)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(i16)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", int16(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", int16(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(int16(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i32)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", i32)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(i32)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", int32(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%v", int32(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	fmt.Sprint(int32(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
+	fmt.Sprintf("%d", i64)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%v", i64)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprint(i64)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%d", int64(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprintf("%v", int64(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	fmt.Sprint(int64(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatInt"
 
 	var ui uint
 	var ui8 uint8
 	var ui16 uint16
 	var ui32 uint32
 	var ui64 uint64
-	fmt.Sprintf("%d", ui)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui)         // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui)                // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint(42))          // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui8)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui8)        // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui8)               // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint8(42))  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint8(42))  // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint8(42))         // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui16)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui16)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui16)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint16(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint16(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint16(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui32)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui32)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui32)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint32(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint32(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint32(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%x", ui64)       // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%x", uint(42))   // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(ui64)              // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%d", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprintf("%v", uint64(42)) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-	fmt.Sprint(uint64(42))        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui)         // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui)         // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(ui)                // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", uint(42))   // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", uint(42))   // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(uint(42))          // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui8)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui8)        // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(ui8)               // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", uint8(42))  // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", uint8(42))  // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(uint8(42))         // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui16)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui16)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(ui16)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", uint16(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", uint16(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(uint16(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui32)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui32)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(ui32)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", uint32(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", uint32(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(uint32(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", ui64)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", ui64)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", ui64)       // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%x", uint(42))   // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(ui64)              // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%d", uint64(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprintf("%v", uint64(42)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+	fmt.Sprint(uint64(42))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
 }
 
 func suggestedFixesTest() {
 	_ = func() string {
 		if false {
-			return fmt.Sprint("replace me") // want "fmt.Sprint can be replaced with just using the string"
+			return fmt.Sprint("replace me") // want "string-format: fmt.Sprint can be replaced with just using the string"
 		}
-		return fmt.Sprintf("%s", "replace me") // want "fmt.Sprintf can be replaced with just using the string"
+		return fmt.Sprintf("%s", "replace me") // want "string-format: fmt.Sprintf can be replaced with just using the string"
 	}
 
 	fmt.Println(fmt.Sprint(errSentinel))
@@ -146,33 +146,33 @@ func suggestedFixesTest() {
 	_ = func() string {
 		switch 42 {
 		case 1:
-			return fmt.Sprint(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+			return fmt.Sprint(false) // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
 		case 2:
-			return fmt.Sprintf("%t", true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+			return fmt.Sprintf("%t", true) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
 		}
 		return ""
 	}
 
 	var offset int
 	params := url.Values{}
-	params.Set("offset", fmt.Sprintf("%d", offset)) // want "fmt.Sprintf can be replaced with faster strconv.Itoa"
-	params.Set("offset", fmt.Sprint(offset))        // want "fmt.Sprint can be replaced with faster strconv.Itoa"
+	params.Set("offset", fmt.Sprintf("%d", offset)) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.Itoa"
+	params.Set("offset", fmt.Sprint(offset))        // want "integer-format: fmt.Sprint can be replaced with faster strconv.Itoa"
 
 	var pubKey []byte
 	if verifyPubKey := true; verifyPubKey {
-		log.Println("pubkey=" + fmt.Sprintf("%x", pubKey)) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+		log.Println("pubkey=" + fmt.Sprintf("%x", pubKey)) // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
 	}
 
 	var metaHash [16]byte
 	fn := fmt.Sprintf("%s.%x", "coverage.MetaFilePref", metaHash)
-	_ = "tmp." + fn + fmt.Sprintf("%d", time.Now().UnixNano()) // want "fmt.Sprintf can be replaced with faster strconv.FormatInt"
-	_ = "tmp." + fn + fmt.Sprint(time.Now().UnixNano())        // want "fmt.Sprint can be replaced with faster strconv.FormatInt"
+	_ = "tmp." + fn + fmt.Sprintf("%d", time.Now().UnixNano()) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatInt"
+	_ = "tmp." + fn + fmt.Sprint(time.Now().UnixNano())        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatInt"
 
 	var change struct{ User struct{ ID uint } }
 	var userStr string
 	if id := change.User.ID; id != 0 {
-		userStr = fmt.Sprintf("%d", id) // want "fmt.Sprintf can be replaced with faster strconv.FormatUint"
-		userStr = fmt.Sprint(id)        // want "fmt.Sprint can be replaced with faster strconv.FormatUint"
+		userStr = fmt.Sprintf("%d", id) // want "integer-format: fmt.Sprintf can be replaced with faster strconv.FormatUint"
+		userStr = fmt.Sprint(id)        // want "integer-format: fmt.Sprint can be replaced with faster strconv.FormatUint"
 	}
 	_ = userStr
 }

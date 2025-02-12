@@ -16,19 +16,19 @@ var errSentinel = errors.New("connection refused")
 
 func positive() {
 	var s string
-	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
-	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
-	"hello"             // want "fmt.Sprintf can be replaced with just using the string"
-	"hello"             // want "fmt.Sprint can be replaced with just using the string"
-	s                   // want "fmt.Sprintf can be replaced with just using the string"
-	s                   // want "fmt.Sprintf can be replaced with just using the string"
-	s                   // want "fmt.Sprintf can be replaced with just using the string"
-	s                   // want "fmt.Sprint can be replaced with just using the string"
-	errors.New("hello") // want "fmt.Errorf can be replaced with errors.New"
+	"hello"             // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	"hello"             // want "string-format: fmt.Sprint can be replaced with just using the string"
+	s                   // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	s                   // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	s                   // want "string-format: fmt.Sprintf can be replaced with just using the string"
+	s                   // want "string-format: fmt.Sprint can be replaced with just using the string"
+	errors.New("hello") // want "error-format: fmt.Errorf can be replaced with errors.New"
 
-	"Hello " + s      // want "fmt.Sprintf can be replaced with string concatenation"
-	s + " says Hello" // want "fmt.Sprintf can be replaced with string concatenation"
-	"Hello says " + s // want "fmt.Sprintf can be replaced with string concatenation"
+	"Hello " + s      // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+	s + " says Hello" // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+	"Hello says " + s // want "string-format: fmt.Sprintf can be replaced with string concatenation"
 
 	var err error
 	fmt.Sprintf("%s", errSentinel)
@@ -42,22 +42,22 @@ func positive() {
 	fmt.Sprint(err)
 
 	var b bool
-	strconv.FormatBool(true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(true)  // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(true)  // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(false) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(b)     // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
-	strconv.FormatBool(b)     // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(true)  // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(false) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(false) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(false) // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
+	strconv.FormatBool(b)     // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
 
 	var bs []byte
 	var ba [3]byte
-	hex.EncodeToString([]byte{'a'})  // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	hex.EncodeToString([]uint8{'b'}) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	hex.EncodeToString(bs)           // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
-	hex.EncodeToString(ba[:])        // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	hex.EncodeToString([]byte{'a'})  // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	hex.EncodeToString([]uint8{'b'}) // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	hex.EncodeToString(bs)           // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
+	hex.EncodeToString(ba[:])        // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
 
 	var i int
 	var i8 int8
@@ -137,9 +137,9 @@ func positive() {
 func suggestedFixesTest() {
 	_ = func() string {
 		if false {
-			return "replace me" // want "fmt.Sprint can be replaced with just using the string"
+			return "replace me" // want "string-format: fmt.Sprint can be replaced with just using the string"
 		}
-		return "replace me" // want "fmt.Sprintf can be replaced with just using the string"
+		return "replace me" // want "string-format: fmt.Sprintf can be replaced with just using the string"
 	}
 
 	fmt.Println(fmt.Sprint(errSentinel))
@@ -148,9 +148,9 @@ func suggestedFixesTest() {
 	_ = func() string {
 		switch 42 {
 		case 1:
-			return strconv.FormatBool(false) // want "fmt.Sprint can be replaced with faster strconv.FormatBool"
+			return strconv.FormatBool(false) // want "bool-format: fmt.Sprint can be replaced with faster strconv.FormatBool"
 		case 2:
-			return strconv.FormatBool(true) // want "fmt.Sprintf can be replaced with faster strconv.FormatBool"
+			return strconv.FormatBool(true) // want "bool-format: fmt.Sprintf can be replaced with faster strconv.FormatBool"
 		}
 		return ""
 	}
@@ -162,7 +162,7 @@ func suggestedFixesTest() {
 
 	var pubKey []byte
 	if verifyPubKey := true; verifyPubKey {
-		log.Println("pubkey=" + hex.EncodeToString(pubKey)) // want "fmt.Sprintf can be replaced with faster hex.EncodeToString"
+		log.Println("pubkey=" + hex.EncodeToString(pubKey)) // want "hex-format: fmt.Sprintf can be replaced with faster hex.EncodeToString"
 	}
 
 	var metaHash [16]byte
