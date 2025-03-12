@@ -498,13 +498,13 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		case isBasicType(valueType, types.String) && fn == "fmt.Sprintf" && isConcatable(verb) && n.strFormat.enabled:
 			var fix string
 			if strings.HasSuffix(verb, "%s") {
-				fix = strconv.Quote(verb[:len(verb)-2]) + "+" + formatNode(pass.Fset, value)
+				fix = strings.ReplaceAll(strconv.Quote(verb[:len(verb)-2]), "%%", "%") + "+" + formatNode(pass.Fset, value)
 			} else if strings.HasSuffix(verb, "%[1]s") {
-				fix = strconv.Quote(verb[:len(verb)-5]) + "+" + formatNode(pass.Fset, value)
+				fix = strings.ReplaceAll(strconv.Quote(verb[:len(verb)-5]), "%%", "%") + "+" + formatNode(pass.Fset, value)
 			} else if strings.HasPrefix(verb, "%s") {
-				fix = formatNode(pass.Fset, value) + "+" + strconv.Quote(verb[2:])
+				fix = formatNode(pass.Fset, value) + "+" + strings.ReplaceAll(strconv.Quote(verb[2:]), "%%", "%")
 			} else {
-				fix = formatNode(pass.Fset, value) + "+" + strconv.Quote(verb[5:])
+				fix = formatNode(pass.Fset, value) + "+" + strings.ReplaceAll(strconv.Quote(verb[5:]), "%%", "%")
 			}
 			fname := pass.Fset.File(call.Pos()).Name()
 			removedFmtUsages[fname]++

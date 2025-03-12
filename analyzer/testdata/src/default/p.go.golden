@@ -29,6 +29,8 @@ func positive() {
 	"Hello " + s      // want "string-format: fmt.Sprintf can be replaced with string concatenation"
 	s + " says Hello" // want "string-format: fmt.Sprintf can be replaced with string concatenation"
 	"Hello says " + s // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+        "touch%20" + s   // want "string-format: fmt.Sprintf can be replaced with string concatenation"
+        s + " says %"    // want "string-format: fmt.Sprintf can be replaced with string concatenation"
 
 	var err error
 	fmt.Sprintf("%s", errSentinel)
