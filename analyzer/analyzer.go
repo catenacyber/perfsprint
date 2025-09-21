@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/token"
@@ -40,6 +41,9 @@ type perfSprint struct {
 
 	boolFormat bool
 	hexFormat  bool
+
+	concatLoop bool
+
 	fiximports bool
 }
 
@@ -50,6 +54,7 @@ func newPerfSprint() *perfSprint {
 		strFormat:  optionStr{enabled: true, sprintf1: true, strconcat: true},
 		boolFormat: true,
 		hexFormat:  true,
+		concatLoop: false, // kind of beta
 		fiximports: true,
 	}
 }
@@ -65,6 +70,8 @@ const (
 	checkerBoolFormat = "bool-format"
 	// checkerHexFormat checks for hexadecimal formatting.
 	checkerHexFormat = "hex-format"
+	// checkerConcatLoop checks for concatenation in loop.
+	checkerConcatLoop = "concat-loop"
 	// checkerFixImports fix needed imports from other fixes.
 	checkerFixImports = "fiximports"
 )
@@ -87,6 +94,7 @@ func New() *analysis.Analyzer {
 
 	r.Flags.BoolVar(&n.boolFormat, checkerBoolFormat, n.boolFormat, "enable/disable optimization of bool formatting")
 	r.Flags.BoolVar(&n.hexFormat, checkerHexFormat, n.hexFormat, "enable/disable optimization of hex formatting")
+	r.Flags.BoolVar(&n.concatLoop, checkerConcatLoop, n.concatLoop, "enable/disable optimization of concat loop")
 	r.Flags.BoolVar(&n.strFormat.enabled, checkerStringFormat, n.strFormat.enabled, "enable/disable optimization of string formatting")
 	r.Flags.BoolVar(&n.strFormat.sprintf1, "sprintf1", n.strFormat.sprintf1, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", n.strFormat.strconcat, "optimizes into strings concatenation")
@@ -108,6 +116,145 @@ func isConcatable(verb string) bool {
 	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
 }
 
+func isStringAdd(st *ast.AssignStmt, id *ast.Ident) ast.Expr {
+	// right is one
+	if len(st.Rhs) == 1 {
+		// right is addition
+		add, ok := st.Rhs[0].(*ast.BinaryExpr)
+		if ok && add.Op == token.ADD {
+			// right is addition to same ident name
+			x, ok := add.X.(*ast.Ident)
+			if ok && x.Name == id.Name {
+				return add.Y
+			}
+		}
+	}
+	return nil
+}
+
+func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, node ast.Node, st *ast.AssignStmt, added ast.Expr, idName string) *analysis.Diagnostic {
+	fname := pass.Fset.File(node.Pos()).Name()
+	if _, ok := neededPackages[fname]; !ok {
+		neededPackages[fname] = make(map[string]struct{})
+	}
+	neededPackages[fname]["strings"] = struct{}{}
+	return newAnalysisDiagnostic(
+		checkerConcatLoop,
+		st,
+		"string concatenation in a loop",
+		[]analysis.SuggestedFix{
+			{
+				Message: "Use a strings.Builder",
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     node.Pos(),
+						End:     node.Pos(),
+						NewText: []byte(fmt.Sprintf("var %s_sb strings.Builder\n", idName)),
+					},
+					{
+						Pos:     st.Pos(),
+						End:     added.Pos(),
+						NewText: []byte(fmt.Sprintf("%s_sb.WriteString(", idName)),
+					},
+					{
+						Pos:     added.End(),
+						End:     added.End(),
+						NewText: []byte(")"),
+					},
+					{
+						Pos:     node.End(),
+						End:     node.End(),
+						NewText: []byte(fmt.Sprintf("\n%s = %s_sb.String()", idName, idName)),
+					},
+				},
+			},
+		},
+	)
+
+}
+
+func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) bool {
+	r := false
+	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	nodeFilter := []ast.Node{
+		(*ast.RangeStmt)(nil),
+		(*ast.ForStmt)(nil),
+	}
+	insp.Preorder(nodeFilter, func(node ast.Node) {
+		var d *analysis.Diagnostic
+		declInLoop := make(map[string]bool)
+		var bl []ast.Stmt
+		switch ra := node.(type) {
+		case *ast.RangeStmt:
+			bl = ra.Body.List
+		case *ast.ForStmt:
+			bl = ra.Body.List
+		}
+		// identifiers defined within loop do not count
+		for bs := 0; bs < len(bl); bs++ {
+			switch st := bl[bs].(type) {
+			case *ast.IfStmt:
+				if st.Body != nil {
+					bl = append(bl, st.Body.List...)
+				}
+				el, ok := st.Else.(*ast.BlockStmt)
+				if ok && el != nil {
+					bl = append(bl, el.List...)
+				}
+			case *ast.DeclStmt:
+				de, ok := st.Decl.(*ast.GenDecl)
+				if ok {
+					if len(de.Specs) > 0 {
+						vs, ok := de.Specs[0].(*ast.ValueSpec)
+						if ok {
+							for n := range vs.Names {
+								declInLoop[vs.Names[n].Name] = true
+							}
+						}
+					}
+				}
+			case *ast.AssignStmt:
+				for n := range st.Lhs {
+					id, ok := st.Lhs[n].(*ast.Ident)
+					if !ok {
+						break
+					}
+					switch st.Tok {
+					case token.DEFINE:
+						declInLoop[id.Name] = true
+					case token.ASSIGN, token.ADD_ASSIGN:
+						if n > 0 {
+							// do not care for multi-assign
+							break
+						}
+						_, local := declInLoop[id.Name]
+						if local {
+							break
+						}
+						added := st.Rhs[0]
+						if st.Tok == token.ASSIGN {
+							added = isStringAdd(st, id)
+							if added == nil {
+								break
+							}
+						}
+						ti, ok := pass.TypesInfo.Types[id]
+						if !ok || ti.Type.String() != "string" {
+							break
+						}
+						d = reportConcatLoop(pass, neededPackages, node, st, added, id.Name)
+						r = true
+					}
+				}
+			}
+		}
+		if d != nil {
+			pass.Report(*d)
+		}
+	})
+	return r
+}
+
 func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	if !n.intFormat.enabled {
 		n.intFormat.intConv = false
@@ -121,6 +268,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		n.strFormat.strconcat = false
 	}
 
+	neededPackages := make(map[string]map[string]struct{})
+	concatloop := false
+	if n.concatLoop {
+		concatloop = n.runConcatLoop(pass, neededPackages)
+	}
 	var fmtSprintObj, fmtSprintfObj, fmtErrorfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
@@ -133,7 +285,6 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 	removedFmtUsages := make(map[string]int)
-	neededPackages := make(map[string]map[string]struct{})
 
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
@@ -530,7 +681,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		}
 	})
 
-	if len(removedFmtUsages) > 0 && n.fiximports {
+	if (len(removedFmtUsages) > 0 || concatloop) && n.fiximports {
 		for _, pkg := range pass.Pkg.Imports() {
 			if pkg.Path() == "fmt" {
 				insp = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)

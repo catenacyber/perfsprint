@@ -19,7 +19,7 @@ perfsprint --fix ./...
 
 ## Options
 
-The 5 following options cover all optimizations proposed by the linter.
+The 6 following options cover all optimizations proposed by the linter.
 
 Some have suboptions for specific cases.
 
@@ -33,6 +33,7 @@ Some have suboptions for specific cases.
    - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
 - bool-format (formatting bool with `strconv.FormatBool`)
 - hex-format (formatting bytes with `hex.EncodeToString`)
+- concat-loop (replacing string concatenation in a loop by `strings.Builder`)
 
 
 To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`

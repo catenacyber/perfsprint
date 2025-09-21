@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -228,6 +229,63 @@ func BenchmarkStringAdditionFormatting(b *testing.B) {
 	b.Run("string concatenation", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = "Hello " + "world"
+		}
+		b.ReportAllocs()
+	})
+}
+
+func BenchmarkStringConcatLoop(b *testing.B) {
+	words := []string{"one", "two", "three", "four", "five", "six", "seven", "eight"}
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			s := ""
+			for w := range words {
+				s += words[w]
+			}
+			_ = s
+		}
+		b.ReportAllocs()
+	})
+
+	b.Run("strings Builder", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			var s string
+			var sb strings.Builder
+			for w := range words {
+				sb.WriteString(words[w])
+			}
+			s = sb.String()
+			_ = s
+		}
+		b.ReportAllocs()
+	})
+}
+
+func BenchmarkStringConcatLoopBig(b *testing.B) {
+	words := make([]string, 0x10000)
+	for i := 0; i < 0x10000; i++ {
+		words[i] = strconv.Itoa(i)
+	}
+	b.Run("fmt.Sprintf", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			s := ""
+			for w := range words {
+				s += words[w]
+			}
+			_ = s
+		}
+		b.ReportAllocs()
+	})
+
+	b.Run("strings Builder", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			var s string
+			var sb strings.Builder
+			for w := range words {
+				sb.WriteString(words[w])
+			}
+			s = sb.String()
+			_ = s
 		}
 		b.ReportAllocs()
 	})
