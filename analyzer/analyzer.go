@@ -779,7 +779,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 						}
 					}
 				})
-			} else if pkg.Path() == "errors" || pkg.Path() == "strconv" || pkg.Path() == "encoding/hex" {
+			} else if pkg.Path() == "errors" || pkg.Path() == "strconv" || pkg.Path() == "encoding/hex" || pkg.Path() == "strings" {
 				insp = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 				nodeFilter = []ast.Node{
 					(*ast.ImportSpec)(nil),
