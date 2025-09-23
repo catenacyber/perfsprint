@@ -137,6 +137,7 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 	if _, ok := neededPackages[fname]; !ok {
 		neededPackages[fname] = make(map[string]struct{})
 	}
+	// note that we will need strings package
 	neededPackages[fname]["strings"] = struct{}{}
 
 	// sort for reproducibility
@@ -146,16 +147,20 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 	}
 	sort.Strings(keys)
 
-	astPosition := pass.Fset.Position(node.Pos())
+	// use line number to define a unique variable name for the strings Builder
+	loopStartLine := pass.Fset.Position(node.Pos()).Line
 
-	addTODO := false
-
+	// If the loop does more with the string than concatenations
+	// add a TODO/FIXME comment that the fix is likely incomplete/incorrect
+	addTODO := ""
 	ast.Inspect(node, func(n ast.Node) bool {
-		if addTODO {
+		if len(addTODO) > 0 {
+			// already found one, stop recursing
 			return false
 		}
 		switch x := n.(type) {
 		case *ast.AssignStmt:
+			// skip if this is one string concatenation that we are fixing
 			if (x.Tok == token.ASSIGN || x.Tok == token.ADD_ASSIGN) && len(x.Lhs) == 1 {
 				id, ok := x.Lhs[0].(*ast.Ident)
 				if ok {
@@ -168,7 +173,8 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 		case *ast.Ident:
 			_, ok := adds[x.Name]
 			if ok {
-				addTODO = true
+				// The variable name is used in some place else
+				addTODO = x.Name
 				return false
 			}
 		}
@@ -177,13 +183,17 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 
 	prefix := ""
 	suffix := ""
-	if addTODO {
-		prefix = "// FIXME check usages of string identifier in loop\n"
+	if len(addTODO) > 0 {
+		prefix = fmt.Sprintf("// FIXME check usages of string identifier %s (and mayber others) in loop\n", addTODO)
 	}
+	// The fix contains 3 parts
+	// before the loop: declare the strings Builders
+	// during the loop: replace concatenation with Builder.WriteString
+	// after the loop: use the Builder.String to append to the pre-existing string
 	for _, k := range keys {
 		// lol
-		prefix += fmt.Sprintf("var %sSb%d strings.Builder\n", k, astPosition.Line)
-		suffix += fmt.Sprintf("\n%s += %sSb%d.String()", k, k, astPosition.Line)
+		prefix += fmt.Sprintf("var %sSb%d strings.Builder\n", k, loopStartLine)
+		suffix += fmt.Sprintf("\n%s += %sSb%d.String()", k, k, loopStartLine)
 	}
 	te := []analysis.TextEdit{
 		{
@@ -195,14 +205,16 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 	for _, k := range keys {
 		v := adds[k]
 		for _, st := range v {
+			// s += "x" -> use "x"
 			added := st.Rhs[0]
 			if st.Tok == token.ASSIGN {
+				// s = s + "x" -> use just "x", not `s + "x"`
 				added = isStringAdd(st, k)
 			}
 			te = append(te, analysis.TextEdit{
 				Pos:     st.Pos(),
 				End:     added.Pos(),
-				NewText: []byte(fmt.Sprintf("%sSb%d.WriteString(", k, astPosition.Line)),
+				NewText: []byte(fmt.Sprintf("%sSb%d.WriteString(", k, loopStartLine)),
 			})
 			te = append(te, analysis.TextEdit{
 				Pos:     added.End(),
@@ -233,23 +245,30 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) bool {
 	r := false
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	// 2 different kinds of loops in go
 	nodeFilter := []ast.Node{
 		(*ast.RangeStmt)(nil),
 		(*ast.ForStmt)(nil),
 	}
 	insp.Preorder(nodeFilter, func(node ast.Node) {
+		// set of variable names declared insied the loop
 		declInLoop := make(map[string]bool)
 		var bl []ast.Stmt
+		// just take the list of instruction of the loop
 		switch ra := node.(type) {
 		case *ast.RangeStmt:
 			bl = ra.Body.List
 		case *ast.ForStmt:
 			bl = ra.Body.List
 		}
+		// set of results : mapping a variable name to a list of statements like `s +=`
+		// one loop may be bad for multiple string variables,
+		// each being concatenated in multiple statements
 		adds := make(map[string][]*ast.AssignStmt)
 		for bs := 0; bs < len(bl); bs++ {
 			switch st := bl[bs].(type) {
 			case *ast.IfStmt:
+				// explore breadth first, but go inside the if/else blocks
 				if st.Body != nil {
 					bl = append(bl, st.Body.List...)
 				}
@@ -260,15 +279,19 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 			case *ast.DeclStmt:
 				// identifiers defined within loop do not count
 				de, ok := st.Decl.(*ast.GenDecl)
-				if ok {
-					if len(de.Specs) > 0 {
-						vs, ok := de.Specs[0].(*ast.ValueSpec)
-						if ok {
-							for n := range vs.Names {
-								declInLoop[vs.Names[n].Name] = true
-							}
-						}
-					}
+				if !ok {
+					break
+				}
+				if len(de.Specs) != 1 {
+					break
+				}
+				// is it possible to have len(de.Specs) > 1 for ValueSpec ?
+				vs, ok := de.Specs[0].(*ast.ValueSpec)
+				if !ok {
+					break
+				}
+				for n := range vs.Names {
+					declInLoop[vs.Names[n].Name] = true
 				}
 			case *ast.AssignStmt:
 				for n := range st.Lhs {
@@ -281,7 +304,7 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 						declInLoop[id.Name] = true
 					case token.ASSIGN, token.ADD_ASSIGN:
 						if n > 0 {
-							// do not care for multi-assign
+							// do not search bugs for multi-assign
 							break
 						}
 						_, local := declInLoop[id.Name]
@@ -297,6 +320,7 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 								break
 							}
 						}
+						// found a bad string concat in the loop
 						adds[id.Name] = append(adds[id.Name], st)
 						r = true
 					}
