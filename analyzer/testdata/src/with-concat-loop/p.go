@@ -25,6 +25,13 @@ func positive() {
 			s = s + "y" // want "concat-loop: string concatenation in a loop"
 		}
 	}
+	for w := 0; w < 10; w++ {
+		if w%2 == 1 {
+			s = s + "x" // want "concat-loop: string concatenation in a loop"
+		} else {
+			s = s + "y"
+		}
+	}
 }
 
 func negative() {

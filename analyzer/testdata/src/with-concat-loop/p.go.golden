@@ -35,6 +35,15 @@ func positive() {
 		}
 	}
 	s += sSb.String()
+	var sSb strings.Builder
+	for w := 0; w < 10; w++ {
+		if w%2 == 1 {
+			sSb.WriteString("x") // want "concat-loop: string concatenation in a loop"
+		} else {
+			sSb.WriteString("y")
+		}
+	}
+	s += sSb.String()
 }
 
 func negative() {

@@ -116,7 +116,7 @@ func isConcatable(verb string) bool {
 	return (hasPrefix || hasSuffix) && !(hasPrefix && hasSuffix)
 }
 
-func isStringAdd(st *ast.AssignStmt, id *ast.Ident) ast.Expr {
+func isStringAdd(st *ast.AssignStmt, idname string) ast.Expr {
 	// right is one
 	if len(st.Rhs) == 1 {
 		// right is addition
@@ -124,7 +124,7 @@ func isStringAdd(st *ast.AssignStmt, id *ast.Ident) ast.Expr {
 		if ok && add.Op == token.ADD {
 			// right is addition to same ident name
 			x, ok := add.X.(*ast.Ident)
-			if ok && x.Name == id.Name {
+			if ok && x.Name == idname {
 				return add.Y
 			}
 		}
@@ -132,45 +132,62 @@ func isStringAdd(st *ast.AssignStmt, id *ast.Ident) ast.Expr {
 	return nil
 }
 
-func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, node ast.Node, st *ast.AssignStmt, added ast.Expr, idName string) *analysis.Diagnostic {
+func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, node ast.Node, adds map[string][]*ast.AssignStmt) *analysis.Diagnostic {
 	fname := pass.Fset.File(node.Pos()).Name()
 	if _, ok := neededPackages[fname]; !ok {
 		neededPackages[fname] = make(map[string]struct{})
 	}
 	neededPackages[fname]["strings"] = struct{}{}
-	return newAnalysisDiagnostic(
-		checkerConcatLoop,
-		st,
-		"string concatenation in a loop",
-		[]analysis.SuggestedFix{
+	if len(adds) > 1 {
+		return newAnalysisDiagnostic(
+			checkerConcatLoop,
+			node,
+			"multiple string concatenation in a loop",
+			[]analysis.SuggestedFix{})
+	}
+	for k, v := range adds {
+		te := []analysis.TextEdit{
 			{
-				Message: "Use a strings.Builder",
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     node.Pos(),
-						End:     node.Pos(),
-						NewText: []byte(fmt.Sprintf("var %sSb strings.Builder\n", idName)),
-					},
-					{
-						Pos:     st.Pos(),
-						End:     added.Pos(),
-						NewText: []byte(fmt.Sprintf("%sSb.WriteString(", idName)),
-					},
-					{
-						Pos:     added.End(),
-						End:     added.End(),
-						NewText: []byte(")"),
-					},
-					{
-						Pos:     node.End(),
-						End:     node.End(),
-						NewText: []byte(fmt.Sprintf("\n%s += %sSb.String()", idName, idName)),
-					},
+				Pos:     node.Pos(),
+				End:     node.Pos(),
+				NewText: []byte(fmt.Sprintf("var %sSb strings.Builder\n", k)),
+			},
+		}
+		for _, st := range v {
+			added := st.Rhs[0]
+			if st.Tok == token.ASSIGN {
+				added = isStringAdd(st, k)
+			}
+			te = append(te, analysis.TextEdit{
+				Pos:     st.Pos(),
+				End:     added.Pos(),
+				NewText: []byte(fmt.Sprintf("%sSb.WriteString(", k)),
+			})
+			te = append(te, analysis.TextEdit{
+				Pos:     added.End(),
+				End:     added.End(),
+				NewText: []byte(")"),
+			})
+		}
+		te = append(te, analysis.TextEdit{
+			Pos:     node.End(),
+			End:     node.End(),
+			NewText: []byte(fmt.Sprintf("\n%s += %sSb.String()", k, k)),
+		})
+
+		return newAnalysisDiagnostic(
+			checkerConcatLoop,
+			v[0],
+			"string concatenation in a loop",
+			[]analysis.SuggestedFix{
+				{
+					Message:   "Use a strings.Builder",
+					TextEdits: te,
 				},
 			},
-		},
-	)
-
+		)
+	}
+	return nil
 }
 
 func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) bool {
@@ -181,7 +198,6 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 		(*ast.ForStmt)(nil),
 	}
 	insp.Preorder(nodeFilter, func(node ast.Node) {
-		var d *analysis.Diagnostic
 		declInLoop := make(map[string]bool)
 		var bl []ast.Stmt
 		switch ra := node.(type) {
@@ -190,7 +206,7 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 		case *ast.ForStmt:
 			bl = ra.Body.List
 		}
-		// identifiers defined within loop do not count
+		adds := make(map[string][]*ast.AssignStmt)
 		for bs := 0; bs < len(bl); bs++ {
 			switch st := bl[bs].(type) {
 			case *ast.IfStmt:
@@ -202,6 +218,7 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 					bl = append(bl, el.List...)
 				}
 			case *ast.DeclStmt:
+				// identifiers defined within loop do not count
 				de, ok := st.Decl.(*ast.GenDecl)
 				if ok {
 					if len(de.Specs) > 0 {
@@ -231,24 +248,23 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 						if local {
 							break
 						}
-						added := st.Rhs[0]
-						if st.Tok == token.ASSIGN {
-							added = isStringAdd(st, id)
-							if added == nil {
-								break
-							}
-						}
 						ti, ok := pass.TypesInfo.Types[id]
 						if !ok || ti.Type.String() != "string" {
 							break
 						}
-						d = reportConcatLoop(pass, neededPackages, node, st, added, id.Name)
+						if st.Tok == token.ASSIGN {
+							if isStringAdd(st, id.Name) == nil {
+								break
+							}
+						}
+						adds[id.Name] = append(adds[id.Name], st)
 						r = true
 					}
 				}
 			}
 		}
-		if d != nil {
+		if len(adds) > 0 {
+			d := reportConcatLoop(pass, neededPackages, node, adds)
 			pass.Report(*d)
 		}
 	})
