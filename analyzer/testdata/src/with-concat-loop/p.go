@@ -32,6 +32,14 @@ func positive() {
 			s = s + "y"
 		}
 	}
+	s2 := "prefix"
+	for w := 0; w < 10; w++ {
+		if w%2 == 1 {
+			s2 = s2 + "x"
+		} else {
+			s = s + "y" // want "concat-loop: string concatenation in a loop"
+		}
+	}
 }
 
 func negative() {

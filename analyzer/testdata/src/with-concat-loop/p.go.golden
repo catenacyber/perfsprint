@@ -3,47 +3,59 @@ package p
 func positive() {
 	var s string
 	words := []string{"one", "two", "three"}
-	var sSb strings.Builder
+	var sSb6 strings.Builder
 	for w := range words {
-		sSb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb6.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb.String()
-	var sSb strings.Builder
+	s += sSb6.String()
+	var sSb9 strings.Builder
 	for w := range words {
-		sSb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb9.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb.String()
-	var sSb strings.Builder
+	s += sSb9.String()
+	var sSb12 strings.Builder
 	for w := 0; w < 10; w++ {
-		sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		sSb12.WriteString("y") // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb.String()
-	var sSb strings.Builder
+	s += sSb12.String()
+	var sSb15 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb15.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s += sSb.String()
+	s += sSb15.String()
 	nb := 0
-	var sSb strings.Builder
+	var sSb21 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
 			nb += 1
 		} else {
-			sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb21.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s += sSb.String()
-	var sSb strings.Builder
+	s += sSb21.String()
+	var sSb28 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			sSb.WriteString("x") // want "concat-loop: string concatenation in a loop"
+			sSb28.WriteString("x") // want "concat-loop: string concatenation in a loop"
 		} else {
-			sSb.WriteString("y")
+			sSb28.WriteString("y")
 		}
 	}
-	s += sSb.String()
+	s += sSb28.String()
+	s2 := "prefix"
+	var sSb36 strings.Builder
+	var s2Sb36 strings.Builder
+	for w := 0; w < 10; w++ {
+		if w%2 == 1 {
+			s2Sb36.WriteString("x")
+		} else {
+			sSb36.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		}
+	}
+	s += sSb36.String()
+	s2 += s2Sb36.String()
 }
 
 func negative() {

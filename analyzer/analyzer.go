@@ -138,21 +138,32 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 		neededPackages[fname] = make(map[string]struct{})
 	}
 	neededPackages[fname]["strings"] = struct{}{}
-	if len(adds) > 1 {
-		return newAnalysisDiagnostic(
-			checkerConcatLoop,
-			node,
-			"multiple string concatenation in a loop",
-			[]analysis.SuggestedFix{})
+
+	// sort for reproducibility
+	keys := make([]string, 0, len(adds))
+	for k := range adds {
+		keys = append(keys, k)
 	}
-	for k, v := range adds {
-		te := []analysis.TextEdit{
-			{
-				Pos:     node.Pos(),
-				End:     node.Pos(),
-				NewText: []byte(fmt.Sprintf("var %sSb strings.Builder\n", k)),
-			},
-		}
+	sort.Strings(keys)
+
+	astPosition := pass.Fset.Position(node.Pos())
+
+	prefix := ""
+	suffix := ""
+	for _, k := range keys {
+		// lol
+		prefix += fmt.Sprintf("var %sSb%d strings.Builder\n", k, astPosition.Line)
+		suffix += fmt.Sprintf("\n%s += %sSb%d.String()", k, k, astPosition.Line)
+	}
+	te := []analysis.TextEdit{
+		{
+			Pos:     node.Pos(),
+			End:     node.Pos(),
+			NewText: []byte(prefix),
+		},
+	}
+	for _, k := range keys {
+		v := adds[k]
 		for _, st := range v {
 			added := st.Rhs[0]
 			if st.Tok == token.ASSIGN {
@@ -161,7 +172,7 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 			te = append(te, analysis.TextEdit{
 				Pos:     st.Pos(),
 				End:     added.Pos(),
-				NewText: []byte(fmt.Sprintf("%sSb.WriteString(", k)),
+				NewText: []byte(fmt.Sprintf("%sSb%d.WriteString(", k, astPosition.Line)),
 			})
 			te = append(te, analysis.TextEdit{
 				Pos:     added.End(),
@@ -169,25 +180,24 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 				NewText: []byte(")"),
 			})
 		}
-		te = append(te, analysis.TextEdit{
-			Pos:     node.End(),
-			End:     node.End(),
-			NewText: []byte(fmt.Sprintf("\n%s += %sSb.String()", k, k)),
-		})
-
-		return newAnalysisDiagnostic(
-			checkerConcatLoop,
-			v[0],
-			"string concatenation in a loop",
-			[]analysis.SuggestedFix{
-				{
-					Message:   "Use a strings.Builder",
-					TextEdits: te,
-				},
-			},
-		)
 	}
-	return nil
+	te = append(te, analysis.TextEdit{
+		Pos:     node.End(),
+		End:     node.End(),
+		NewText: []byte(suffix),
+	})
+
+	return newAnalysisDiagnostic(
+		checkerConcatLoop,
+		adds[keys[0]][0],
+		"string concatenation in a loop",
+		[]analysis.SuggestedFix{
+			{
+				Message:   "Use a strings.Builder",
+				TextEdits: te,
+			},
+		},
+	)
 }
 
 func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) bool {
