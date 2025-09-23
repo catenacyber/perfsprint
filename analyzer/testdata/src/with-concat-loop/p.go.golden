@@ -3,38 +3,38 @@ package p
 func positive() {
 	var s string
 	words := []string{"one", "two", "three"}
-	var s_sb strings.Builder
+	var sSb strings.Builder
 	for w := range words {
-		s_sb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s = s_sb.String()
-	var s_sb strings.Builder
+	s += sSb.String()
+	var sSb strings.Builder
 	for w := range words {
-		s_sb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s = s_sb.String()
-	var s_sb strings.Builder
+	s += sSb.String()
+	var sSb strings.Builder
 	for w := 0; w < 10; w++ {
-		s_sb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
 	}
-	s = s_sb.String()
-	var s_sb strings.Builder
+	s += sSb.String()
+	var sSb strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			s_sb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s = s_sb.String()
+	s += sSb.String()
 	nb := 0
-	var s_sb strings.Builder
+	var sSb strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
 			nb += 1
 		} else {
-			s_sb.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s = s_sb.String()
+	s += sSb.String()
 }
 
 func negative() {

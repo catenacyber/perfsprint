@@ -149,12 +149,12 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 					{
 						Pos:     node.Pos(),
 						End:     node.Pos(),
-						NewText: []byte(fmt.Sprintf("var %s_sb strings.Builder\n", idName)),
+						NewText: []byte(fmt.Sprintf("var %sSb strings.Builder\n", idName)),
 					},
 					{
 						Pos:     st.Pos(),
 						End:     added.Pos(),
-						NewText: []byte(fmt.Sprintf("%s_sb.WriteString(", idName)),
+						NewText: []byte(fmt.Sprintf("%sSb.WriteString(", idName)),
 					},
 					{
 						Pos:     added.End(),
@@ -164,7 +164,7 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 					{
 						Pos:     node.End(),
 						End:     node.End(),
-						NewText: []byte(fmt.Sprintf("\n%s = %s_sb.String()", idName, idName)),
+						NewText: []byte(fmt.Sprintf("\n%s += %sSb.String()", idName, idName)),
 					},
 				},
 			},
