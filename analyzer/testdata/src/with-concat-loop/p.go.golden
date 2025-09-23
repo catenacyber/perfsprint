@@ -56,6 +56,15 @@ func positive() {
 	}
 	s += sSb36.String()
 	s2 += s2Sb36.String()
+	// FIXME check usages of string identifier in loop
+	var sSb43 strings.Builder
+	for w := 0; w < 10; w++ {
+		sSb43.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		if len(s)%3 == 1 {
+			sSb43.WriteString(",")
+		}
+	}
+	s += sSb43.String()
 }
 
 func negative() {

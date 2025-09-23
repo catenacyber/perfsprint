@@ -148,8 +148,38 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 
 	astPosition := pass.Fset.Position(node.Pos())
 
+	addTODO := false
+
+	ast.Inspect(node, func(n ast.Node) bool {
+		if addTODO {
+			return false
+		}
+		switch x := n.(type) {
+		case *ast.AssignStmt:
+			if (x.Tok == token.ASSIGN || x.Tok == token.ADD_ASSIGN) && len(x.Lhs) == 1 {
+				id, ok := x.Lhs[0].(*ast.Ident)
+				if ok {
+					_, ok = adds[id.Name]
+					if ok {
+						return false
+					}
+				}
+			}
+		case *ast.Ident:
+			_, ok := adds[x.Name]
+			if ok {
+				addTODO = true
+				return false
+			}
+		}
+		return true
+	})
+
 	prefix := ""
 	suffix := ""
+	if addTODO {
+		prefix = "// FIXME check usages of string identifier in loop\n"
+	}
 	for _, k := range keys {
 		// lol
 		prefix += fmt.Sprintf("var %sSb%d strings.Builder\n", k, astPosition.Line)
