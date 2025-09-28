@@ -1,0 +1,16 @@
+package a
+
+import (
+	"strings"
+)
+
+func loopconcat2() {
+	// already strings
+	s := ""
+	var sSb10 strings.Builder
+	for i := 0; i < 10; i++ {
+		sSb10.WriteString("toto") // want "concat-loop: string concatenation in a loop"
+	}
+	s += sSb10.String()
+	println("Hello, World!", strings.Fields(s))
+}

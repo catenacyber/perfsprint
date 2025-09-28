@@ -1,0 +1,16 @@
+package a
+
+import (
+	"strings"
+)
+
+func loopconcat() { // want "fiximports: Fix imports"
+	// no imports, adding strings
+	s := ""
+	var sSb6 strings.Builder
+	for i := 0; i < 10; i++ {
+		sSb6.WriteString("toto") // want "concat-loop: string concatenation in a loop"
+	}
+	s += sSb6.String()
+	println("Hello, World!", s)
+}

@@ -1,8 +1,8 @@
 package p
 
-import (
+import ( // want "Fix imports"
 	"errors"
-	"fmt" // want "Fix imports"
+	"fmt"
 	"io"
 	"log"
 	"net/url"

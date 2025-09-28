@@ -1,6 +1,10 @@
 package p
 
-func positive() {
+import (
+	"strings"
+)
+
+func positive() { // want "fiximports: Fix imports"
 	var s string
 	words := []string{"one", "two", "three"}
 	var sSb6 strings.Builder

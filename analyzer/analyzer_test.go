@@ -22,11 +22,6 @@ func TestAnalyzer(t *testing.T) {
 
 	defaultAnalyzer := analyzer.New()
 	defaultAnalyzer.Flags.VisitAll(func(f *flag.Flag) {
-		if f.Name == "fiximports" {
-			// fiximports is a special case, let's skip it
-			return
-		}
-
 		name := f.Name
 		var changedVal string
 		switch f.DefValue {
@@ -42,9 +37,17 @@ func TestAnalyzer(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			a := analyzer.New()
-			err := a.Flags.Set(f.Name, changedVal)
-			if err != nil {
-				t.Fatalf("failed to set %q flag", f.Name)
+			if f.Name == "fiximports" {
+				name = "with-fiximports"
+				err := a.Flags.Set("concat-loop", "true")
+				if err != nil {
+					t.Fatalf("failed to set %q flag", f.Name)
+				}
+			} else {
+				err := a.Flags.Set(f.Name, changedVal)
+				if err != nil {
+					t.Fatalf("failed to set %q flag", f.Name)
+				}
 			}
 			analysistest.RunWithSuggestedFixes(t, analysistest.TestData(), a, name)
 		})

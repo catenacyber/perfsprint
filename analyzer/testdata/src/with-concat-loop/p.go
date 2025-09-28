@@ -1,6 +1,6 @@
 package p
 
-func positive() {
+func positive() { // want "fiximports: Fix imports"
 	var s string
 	words := []string{"one", "two", "three"}
 	for w := range words {

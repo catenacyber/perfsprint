@@ -1,0 +1,17 @@
+package a
+
+import (
+	"strings"
+	// want "fiximports: Fix imports"
+)
+
+func loopconcat3() {
+	// only fmt removed, but strings added
+	s := ""
+	var sSb10 strings.Builder
+	for i := 0; i < 10; i++ {
+		sSb10.WriteString("toto") // want "concat-loop: string concatenation in a loop"
+	}
+	s += sSb10.String()
+	println("Hello, World!", s) // want "string-format: fmt.Sprintf can be replaced with just using the string"
+}

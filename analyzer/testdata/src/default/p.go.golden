@@ -1,6 +1,6 @@
 package p
 
-import (
+import ( // want "Fix imports"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strconv" // want "Fix imports"
+	"strconv"
 	"time"
 )
 

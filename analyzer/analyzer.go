@@ -242,8 +242,7 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 	)
 }
 
-func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) bool {
-	r := false
+func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) {
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	// 2 different kinds of loops in go
 	nodeFilter := []ast.Node{
@@ -322,7 +321,6 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 						}
 						// found a bad string concat in the loop
 						adds[id.Name] = append(adds[id.Name], st)
-						r = true
 					}
 				}
 			}
@@ -332,7 +330,105 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 			pass.Report(*d)
 		}
 	})
-	return r
+}
+
+func (n *perfSprint) fixImports(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, removedFmtUsages map[string]int) {
+	if !n.fiximports {
+		return
+	}
+	for _, pkg := range pass.Pkg.Imports() {
+		if pkg.Path() == "fmt" {
+			insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+			nodeFilter := []ast.Node{
+				(*ast.SelectorExpr)(nil),
+			}
+			insp.Preorder(nodeFilter, func(node ast.Node) {
+				selec := node.(*ast.SelectorExpr)
+				selecok, ok := selec.X.(*ast.Ident)
+				if ok {
+					pkgname, ok := pass.TypesInfo.ObjectOf(selecok).(*types.PkgName)
+					if ok && pkgname.Name() == pkg.Name() {
+						fname := pass.Fset.File(pkgname.Pos()).Name()
+						removedFmtUsages[fname]--
+					}
+				}
+			})
+		} else if pkg.Path() == "errors" || pkg.Path() == "strconv" || pkg.Path() == "encoding/hex" || pkg.Path() == "strings" {
+			insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+			nodeFilter := []ast.Node{
+				(*ast.ImportSpec)(nil),
+			}
+			insp.Preorder(nodeFilter, func(node ast.Node) {
+				gd := node.(*ast.ImportSpec)
+				if gd.Path.Value == strconv.Quote(pkg.Path()) {
+					fname := pass.Fset.File(gd.Pos()).Name()
+					if _, ok := neededPackages[fname]; ok {
+						delete(neededPackages[fname], pkg.Path())
+					}
+				}
+			})
+		}
+	}
+	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	nodeFilter := []ast.Node{
+		(*ast.File)(nil),
+	}
+	insp.Preorder(nodeFilter, func(node ast.Node) {
+		gd := node.(*ast.File)
+		fname := pass.Fset.File(gd.Pos()).Name()
+		removed, hasFmt := removedFmtUsages[fname]
+		if (!hasFmt || removed < 0) && len(neededPackages[fname]) == 0 {
+			return
+		}
+		fix := ""
+		var ar analysis.Range
+		ar = gd.Decls[0]
+		start := gd.Decls[0].Pos()
+		end := gd.Decls[0].Pos()
+		if len(gd.Imports) == 0 {
+			fix += "import (\n"
+		} else {
+			id := gd.Decls[0].(*ast.GenDecl)
+			start = id.Specs[0].Pos()
+			end = id.Specs[0].Pos()
+			if removedFmtUsages[fname] >= 0 {
+				for sp := range id.Specs {
+					is := id.Specs[sp].(*ast.ImportSpec)
+					if is.Path.Value == strconv.Quote("fmt") {
+						ar = is
+						start = is.Pos()
+						end = is.End()
+						break
+					}
+				}
+			}
+		}
+		keys := make([]string, 0, len(neededPackages[fname]))
+		for k := range neededPackages[fname] {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			fix = fix + "\t\"" + k + "\"\n"
+		}
+		if len(gd.Imports) == 0 {
+			fix += ")\n"
+		}
+		pass.Report(*newAnalysisDiagnostic(
+			checkerFixImports,
+			ar,
+			"Fix imports",
+			[]analysis.SuggestedFix{
+				{
+					Message: "Fix imports",
+					TextEdits: []analysis.TextEdit{{
+						Pos:     start,
+						End:     end,
+						NewText: []byte(fix),
+					}},
+				},
+			}))
+	})
 }
 
 func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
@@ -349,10 +445,10 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	neededPackages := make(map[string]map[string]struct{})
-	concatloop := false
 	if n.concatLoop {
-		concatloop = n.runConcatLoop(pass, neededPackages)
+		n.runConcatLoop(pass, neededPackages)
 	}
+	removedFmtUsages := make(map[string]int)
 	var fmtSprintObj, fmtSprintfObj, fmtErrorfObj types.Object
 	for _, pkg := range pass.Pkg.Imports() {
 		if pkg.Path() == "fmt" {
@@ -362,9 +458,11 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		}
 	}
 	if fmtSprintfObj == nil && fmtSprintObj == nil && fmtErrorfObj == nil {
+		if len(neededPackages) > 0 {
+			n.fixImports(pass, neededPackages, removedFmtUsages)
+		}
 		return nil, nil
 	}
-	removedFmtUsages := make(map[string]int)
 
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	nodeFilter := []ast.Node{
@@ -761,79 +859,8 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 		}
 	})
 
-	if (len(removedFmtUsages) > 0 || concatloop) && n.fiximports {
-		for _, pkg := range pass.Pkg.Imports() {
-			if pkg.Path() == "fmt" {
-				insp = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-				nodeFilter = []ast.Node{
-					(*ast.SelectorExpr)(nil),
-				}
-				insp.Preorder(nodeFilter, func(node ast.Node) {
-					selec := node.(*ast.SelectorExpr)
-					selecok, ok := selec.X.(*ast.Ident)
-					if ok {
-						pkgname, ok := pass.TypesInfo.ObjectOf(selecok).(*types.PkgName)
-						if ok && pkgname.Name() == pkg.Name() {
-							fname := pass.Fset.File(pkgname.Pos()).Name()
-							removedFmtUsages[fname]--
-						}
-					}
-				})
-			} else if pkg.Path() == "errors" || pkg.Path() == "strconv" || pkg.Path() == "encoding/hex" || pkg.Path() == "strings" {
-				insp = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-				nodeFilter = []ast.Node{
-					(*ast.ImportSpec)(nil),
-				}
-				insp.Preorder(nodeFilter, func(node ast.Node) {
-					gd := node.(*ast.ImportSpec)
-					if gd.Path.Value == strconv.Quote(pkg.Path()) {
-						fname := pass.Fset.File(gd.Pos()).Name()
-						if _, ok := neededPackages[fname]; ok {
-							delete(neededPackages[fname], pkg.Path())
-						}
-					}
-				})
-			}
-		}
-		insp = pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-		nodeFilter = []ast.Node{
-			(*ast.ImportSpec)(nil),
-		}
-		insp.Preorder(nodeFilter, func(node ast.Node) {
-			gd := node.(*ast.ImportSpec)
-			if gd.Path.Value == `"fmt"` {
-				fix := ""
-				fname := pass.Fset.File(gd.Pos()).Name()
-				if removedFmtUsages[fname] < 0 {
-					fix += `"fmt"`
-					if len(neededPackages[fname]) == 0 {
-						return
-					}
-				}
-				keys := make([]string, 0, len(neededPackages[fname]))
-				for k := range neededPackages[fname] {
-					keys = append(keys, k)
-				}
-				sort.Strings(keys)
-				for _, k := range keys {
-					fix = fix + "\n\t\"" + k + `"`
-				}
-				pass.Report(*newAnalysisDiagnostic(
-					checkerFixImports,
-					gd,
-					"Fix imports",
-					[]analysis.SuggestedFix{
-						{
-							Message: "Fix imports",
-							TextEdits: []analysis.TextEdit{{
-								Pos:     gd.Pos(),
-								End:     gd.End(),
-								NewText: []byte(fix),
-							}},
-						},
-					}))
-			}
-		})
+	if len(removedFmtUsages) > 0 || len(neededPackages) > 0 {
+		n.fixImports(pass, neededPackages, removedFmtUsages)
 	}
 
 	return nil, nil
