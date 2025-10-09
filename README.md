@@ -3,23 +3,22 @@
 [![CI](https://github.com/catenacyber/perfsprint/actions/workflows/ci.yml/badge.svg)](https://github.com/catenacyber/perfsprint/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/catenacyber/perfsprint)](https://goreportcard.com/report/github.com/catenacyber/perfsprint?dummy=unused)
 
-Golang linter for performance, aiming at usages of `fmt.Sprintf` which have faster alternatives.
+Golang linter for performance that replaces uses of `fmt.Sprintf` and `fmt.Errorf` with better (both in CPU and memory) alternatives.
 
 ## Installation
 
-```sh
-go install github.com/catenacyber/perfsprint@latest
-```
+If you use `golangci-lint`, you can add it to your `.golangci.yml`:
 
-## Usage
-
-```sh
-perfsprint --fix ./...
+```yaml
+version: "2"
+linters:
+    enable:
+        - perfsprint
 ```
 
 ## Options
 
-The 6 following options cover all optimizations proposed by the linter.
+The 6 options below cover all optimizations proposed by the linter. 
 
 Some have suboptions for specific cases, including cases where the linter proposes a behavior change.
 
@@ -29,12 +28,12 @@ Some have suboptions for specific cases, including cases where the linter propos
     - errorf : turns `fmt.Errorf` into `errors.New`, known behavior change, avoiding panic
     - err-error : turns `fmt.Sprintf(err)` and like into `err.Error()`, known behavior change, panicking for nil errors
 - string-format (formatting strings)
-   - sprintf1 : turns `fmt.Sprintf(msg)` and like into `msg`, known behavior change, avoiding panic
-   - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
+    - sprintf1 : turns `fmt.Sprintf(msg)` and like into `msg`, known behavior change, avoiding panic
+    - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
 - bool-format (formatting bool with `strconv.FormatBool`)
 - hex-format (formatting bytes with `hex.EncodeToString`)
 - concat-loop (replacing string concatenation in a loop by `strings.Builder`)
-   - loop-other-ops : matches also if the loop has other operations than concatenation on the string
+    - loop-other-ops : matches also if the loop has other operations than concatenation on the string
 
 There is also a `fix-imports` option that should auto-fix the imports section.
 It will add a comment `//TODO FIXME` if a package with the same name is already used.
@@ -74,7 +73,11 @@ for i:=0; i<10; i++ {
 }
 ```
 
-### Replacements
+## Replacements
+
+In general, using `fmt.Sprintf` is slow because it has to parse the arguments and format them according to various supported verbs (`%x`, `%d`, `%v`, etc.). 
+
+This linter proposes the following replacements that are faster and allocate less memory.
 
 ```
 fmt.Sprintf("%s", strVal)  ->  strVal
@@ -84,4 +87,15 @@ fmt.Sprintf("%d", id)      ->  strconv.Itoa(id)
 fmt.Sprintf("%v", version) ->  strconv.FormatUint(uint64(version), 10)
 ```
 
-More in [tests](./analyzer/testdata/src/p/p.go).
+To know how fast each replacement is, run `make bench`. You will see something like this for each replacement:
+
+```
+cpu: Apple M4 Max
+BenchmarkStringFormatting/fmt.Sprint            227844582               25.39 ns/op            5 B/op            1 allocs/op
+BenchmarkStringFormatting/fmt.Sprintf           222438842               27.40 ns/op            5 B/op            1 allocs/op
+BenchmarkStringFormatting/REPLACEMENT:just_string               1000000000               0.2421 ns/op            0 B/op          0 allocs/op
+```
+
+The replacement is 100x faster (25 ns per operation vs 0.23 nanoseconds per operation) and allocates no memory (5 Bytes per operation vs 0 Bytes per operation).
+
+More in [tests](./analyzer/testdata/src) and in this blog: https://philpearl.github.io/post/bad_go_sprintf/

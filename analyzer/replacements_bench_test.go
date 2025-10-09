@@ -24,7 +24,7 @@ func BenchmarkStringFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("just string", func(b *testing.B) {
+	b.Run("REPLACEMENT:just string", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = "hello"
 		}
@@ -44,7 +44,7 @@ func BenchmarkErrorFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("Error()", func(b *testing.B) {
+	b.Run("REPLACEMENT:Error()", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = context.DeadlineExceeded.Error()
 		}
@@ -58,7 +58,7 @@ func BenchmarkFormattingError(b *testing.B) {
 		}
 	})
 
-	b.Run("errors.New", func(b *testing.B) {
+	b.Run("REPLACEMENT:errors.New", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = errors.New("onlystring")
 		}
@@ -78,7 +78,7 @@ func BenchmarkBoolFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("strconv.FormatBool", func(b *testing.B) {
+	b.Run("REPLACEMENT:strconv.FormatBool", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = strconv.FormatBool(true)
 		}
@@ -92,7 +92,7 @@ func BenchmarkHexEncoding(b *testing.B) {
 		}
 	})
 
-	b.Run("hex.EncodeToString", func(b *testing.B) {
+	b.Run("REPLACEMENT:hex.EncodeToString", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = hex.EncodeToString([]byte{'a', 'b', 'c'})
 		}
@@ -107,7 +107,7 @@ func BenchmarkHexArrayEncoding(b *testing.B) {
 		}
 	})
 
-	b.Run("hex.EncodeToString", func(b *testing.B) {
+	b.Run("REPLACEMENT:hex.EncodeToString", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			val := [3]byte{'a', 'b', 'c'}
 			_ = hex.EncodeToString(val[:])
@@ -128,7 +128,7 @@ func BenchmarkIntFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("strconv.Itoa", func(b *testing.B) {
+	b.Run("REPLACEMENT:strconv.Itoa", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = strconv.Itoa(math.MaxInt)
 		}
@@ -150,7 +150,7 @@ func BenchmarkIntConversionFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("strconv.FormatInt", func(b *testing.B) {
+	b.Run("REPLACEMENT:strconv.FormatInt", func(b *testing.B) {
 		u := int32(0x12345678)
 		for n := 0; n < b.N; n++ {
 			_ = strconv.FormatInt(int64(u), 10)
@@ -171,7 +171,7 @@ func BenchmarkUintFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("strconv.FormatUint", func(b *testing.B) {
+	b.Run("REPLACEMENT:strconv.FormatUint", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = strconv.FormatUint(math.MaxUint, 10)
 		}
@@ -185,7 +185,7 @@ func BenchmarkUintHexFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("strconv.FormatUint", func(b *testing.B) {
+	b.Run("REPLACEMENT:strconv.FormatUint", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = strconv.FormatUint(math.MaxUint, 16)
 		}
@@ -199,7 +199,7 @@ func BenchmarkStringAdditionFormatting(b *testing.B) {
 		}
 	})
 
-	b.Run("string concatenation", func(b *testing.B) {
+	b.Run("REPLACEMENT:string concatenation", func(b *testing.B) {
 		for n := 0; n < b.N; n++ {
 			_ = "Hello " + "world"
 		}
@@ -216,7 +216,6 @@ func BenchmarkStringConcatLoop(b *testing.B) {
 			}
 			_ = s
 		}
-		b.ReportAllocs()
 	})
 
 	b.Run("strings Builder", func(b *testing.B) {
@@ -229,7 +228,6 @@ func BenchmarkStringConcatLoop(b *testing.B) {
 			s = sb.String()
 			_ = s
 		}
-		b.ReportAllocs()
 	})
 }
 
@@ -246,7 +244,6 @@ func BenchmarkStringConcatLoopBig(b *testing.B) {
 			}
 			_ = s
 		}
-		b.ReportAllocs()
 	})
 
 	b.Run("strings Builder", func(b *testing.B) {
@@ -259,6 +256,5 @@ func BenchmarkStringConcatLoopBig(b *testing.B) {
 			s = sb.String()
 			_ = s
 		}
-		b.ReportAllocs()
 	})
 }
