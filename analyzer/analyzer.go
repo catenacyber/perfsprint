@@ -34,15 +34,19 @@ type optionStr struct {
 	strconcat bool
 }
 
+type optionConcatLoop struct {
+	enabled  bool
+	otherOps bool
+}
+
 type perfSprint struct {
-	intFormat optionInt
-	errFormat optionErr
-	strFormat optionStr
+	intFormat  optionInt
+	errFormat  optionErr
+	strFormat  optionStr
+	concatLoop optionConcatLoop
 
 	boolFormat bool
 	hexFormat  bool
-
-	concatLoop bool
 
 	fiximports bool
 }
@@ -52,9 +56,9 @@ func newPerfSprint() *perfSprint {
 		intFormat:  optionInt{enabled: true, intConv: true},
 		errFormat:  optionErr{enabled: true, errError: false, errorf: true},
 		strFormat:  optionStr{enabled: true, sprintf1: true, strconcat: true},
+		concatLoop: optionConcatLoop{enabled: true, otherOps: false},
 		boolFormat: true,
 		hexFormat:  true,
-		concatLoop: false, // kind of beta
 		fiximports: true,
 	}
 }
@@ -94,7 +98,8 @@ func New() *analysis.Analyzer {
 
 	r.Flags.BoolVar(&n.boolFormat, checkerBoolFormat, n.boolFormat, "enable/disable optimization of bool formatting")
 	r.Flags.BoolVar(&n.hexFormat, checkerHexFormat, n.hexFormat, "enable/disable optimization of hex formatting")
-	r.Flags.BoolVar(&n.concatLoop, checkerConcatLoop, n.concatLoop, "enable/disable optimization of concat loop")
+	r.Flags.BoolVar(&n.concatLoop.enabled, checkerConcatLoop, n.concatLoop.enabled, "enable/disable optimization of concat loop")
+	r.Flags.BoolVar(&n.concatLoop.otherOps, "loop-other-ops", n.concatLoop.otherOps, "optimization of concat loop even with other operations")
 	r.Flags.BoolVar(&n.strFormat.enabled, checkerStringFormat, n.strFormat.enabled, "enable/disable optimization of string formatting")
 	r.Flags.BoolVar(&n.strFormat.sprintf1, "sprintf1", n.strFormat.sprintf1, "optimizes fmt.Sprintf with only one argument")
 	r.Flags.BoolVar(&n.strFormat.strconcat, "strconcat", n.strFormat.strconcat, "optimizes into strings concatenation")
@@ -132,7 +137,7 @@ func isStringAdd(st *ast.AssignStmt, idname string) ast.Expr {
 	return nil
 }
 
-func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, node ast.Node, adds map[string][]*ast.AssignStmt) *analysis.Diagnostic {
+func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}, node ast.Node, adds map[string][]*ast.AssignStmt) *analysis.Diagnostic {
 	fname := pass.Fset.File(node.Pos()).Name()
 	if _, ok := neededPackages[fname]; !ok {
 		neededPackages[fname] = make(map[string]struct{})
@@ -184,6 +189,9 @@ func reportConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]
 	prefix := ""
 	suffix := ""
 	if len(addTODO) > 0 {
+		if !n.concatLoop.otherOps {
+			return nil
+		}
 		prefix = fmt.Sprintf("// FIXME check usages of string identifier %s (and mayber others) in loop\n", addTODO)
 	}
 	// The fix contains 3 parts
@@ -326,8 +334,10 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 			}
 		}
 		if len(adds) > 0 {
-			d := reportConcatLoop(pass, neededPackages, node, adds)
-			pass.Report(*d)
+			d := n.reportConcatLoop(pass, neededPackages, node, adds)
+			if d != nil {
+				pass.Report(*d)
+			}
 		}
 	})
 }
@@ -445,7 +455,7 @@ func (n *perfSprint) run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	neededPackages := make(map[string]map[string]struct{})
-	if n.concatLoop {
+	if n.concatLoop.enabled {
 		n.runConcatLoop(pass, neededPackages)
 	}
 	removedFmtUsages := make(map[string]int)

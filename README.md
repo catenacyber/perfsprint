@@ -34,7 +34,7 @@ Some have suboptions for specific cases, including cases where the linter propos
 - bool-format (formatting bool with `strconv.FormatBool`)
 - hex-format (formatting bytes with `hex.EncodeToString`)
 - concat-loop (replacing string concatenation in a loop by `strings.Builder`)
-
+   - loop-other-ops : matches also if the loop has other operations than concatenation on the string
 
 The `errorf` optimization is not always equivalent:
 ```
@@ -57,6 +57,19 @@ var err error
 err.Error() // optimized, panics !
 ```
 This optimization only works when the error is not nil, otherwise the resulting code will panic.
+
+The `loop-other-ops` optimization is not always equivalent.
+The proposed fix will likely fail to compile.
+Here is an example where the linter will rightly trigger but fail to propose a good fix.
+```
+s := ""
+for i:=0; i<10; i++ {
+    s += "ab"
+    if len(s) > 10 { // not a concatenation, no autofix
+        return s // not a concatenation, no autofix
+    }
+}
+```
 
 ### Replacements
 

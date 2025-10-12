@@ -22,6 +22,9 @@ func TestAnalyzer(t *testing.T) {
 
 	defaultAnalyzer := analyzer.New()
 	defaultAnalyzer.Flags.VisitAll(func(f *flag.Flag) {
+		if f.Name == "loop-other-ops" {
+			return
+		}
 		name := f.Name
 		var changedVal string
 		switch f.DefValue {
@@ -39,7 +42,9 @@ func TestAnalyzer(t *testing.T) {
 			a := analyzer.New()
 			if f.Name == "fiximports" {
 				name = "with-fiximports"
-				err := a.Flags.Set("concat-loop", "true")
+			} else if f.Name == "concat-loop" {
+				name = "with-concat-loop"
+				err := a.Flags.Set("loop-other-ops", "true")
 				if err != nil {
 					t.Fatalf("failed to set %q flag", f.Name)
 				}
