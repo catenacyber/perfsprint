@@ -36,6 +36,9 @@ Some have suboptions for specific cases, including cases where the linter propos
 - concat-loop (replacing string concatenation in a loop by `strings.Builder`)
    - loop-other-ops : matches also if the loop has other operations than concatenation on the string
 
+There is also a `fix-imports` option that should auto-fix the imports section.
+It will add a comment `//TODO FIXME` if a package with the same name is already used.
+
 The `errorf` optimization is not always equivalent:
 ```
 msg := "format string attack %s"

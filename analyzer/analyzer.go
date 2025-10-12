@@ -419,7 +419,19 @@ func (n *perfSprint) fixImports(pass *analysis.Pass, neededPackages map[string]m
 		}
 		sort.Strings(keys)
 		for _, k := range keys {
-			fix = fix + "\t\"" + k + "\"\n"
+			already := false
+			knames := strings.Split(k, "/")
+			kname := knames[len(knames)-1]
+			for i := range gd.Imports { // quadratic
+				if (gd.Imports[i].Name != nil && gd.Imports[i].Name.Name == kname) || (gd.Imports[i].Name == nil && strings.HasSuffix(gd.Imports[i].Path.Value, "/"+kname+`"`)) {
+					already = true
+				}
+			}
+			if already {
+				fix = fix + "\t\"" + k + "\" //TODO FIXME\n"
+			} else {
+				fix = fix + "\t\"" + k + "\"\n"
+			}
 		}
 		if len(gd.Imports) == 0 {
 			fix += ")\n"
