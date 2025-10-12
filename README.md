@@ -21,40 +21,41 @@ perfsprint --fix ./...
 
 The 6 following options cover all optimizations proposed by the linter.
 
-Some have suboptions for specific cases.
+Some have suboptions for specific cases, including cases where the linter proposes a behavior change.
 
 - integer-format (formatting integer with the package `strconv`)
     - int-conversion : disable when the optimization adds a int/uint cast (readability)
 - error-format (formatting errors)
-    - errorf : known behavior change avoiding panic
-    - err-error : known behavior change panicking for nil errors
+    - errorf : turns `fmt.Errorf` into `errors.New`, known behavior change, avoiding panic
+    - err-error : turns `fmt.Sprintf(err)` and like into `err.Error()`, known behavior change, panicking for nil errors
 - string-format (formatting strings)
-   - sprintf1 : known behavior change avoiding panic
+   - sprintf1 : turns `fmt.Sprintf(msg)` and like into `msg`, known behavior change, avoiding panic
    - strconcat : disable turning some `fmt.Sprintf` to a string concatenation (readability)
 - bool-format (formatting bool with `strconv.FormatBool`)
 - hex-format (formatting bytes with `hex.EncodeToString`)
 - concat-loop (replacing string concatenation in a loop by `strings.Builder`)
 
 
-To disable `fmt.Errorf` optimization, you can use the flag `-errorf=false`
-This optimization is not always equivalent.
-The code
+The `errorf` optimization is not always equivalent:
 ```
 msg := "format string attack %s"
-fmt.Errorf(msg)
+// fmt.Errorf(msg) // original, panics
+errors.New(msg) // optimized, does not panic
 ```
-will panic when its optimized version will not (so it should be safer).
 
-To disable `fmt.Sprintf("toto")` optimization, you can use the flag `-sprintf1=false`
-This optimization is not always equivalent.
-The code
+The `sprintf1` optimization is not always equivalent:
 ```
 msg := "format string attack %s"
-fmt.Sprintf(msg)
+// a := fmt.Sprintf(msg) // original, panics
+a := msg // optimized, does not panic
 ```
-will panic when its optimized version will not (so it should be safer).
 
-To enable `err.Error()` optimization, you can use the flag `-err-error=true`
+The `err-error` optimization is not always equivalent:
+```
+var err error
+// fmt.Sprintf(err) // original, does not panic, prints <nil>
+err.Error() // optimized, panics !
+```
 This optimization only works when the error is not nil, otherwise the resulting code will panic.
 
 ### Replacements
