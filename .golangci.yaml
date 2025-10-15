@@ -9,10 +9,12 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+    - perfsprint
   exclusions:
     rules:
       - linters:
           - staticcheck
+          - perfsprint
         path: '(.+)_test\.go'
   settings:
     staticcheck:
