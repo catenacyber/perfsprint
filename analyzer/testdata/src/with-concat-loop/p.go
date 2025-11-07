@@ -57,6 +57,13 @@ func positive() {
 			s = s + "," // want "concat-loop: string concatenation in a loop"
 		}
 	}
+
+	for w := 0; w < 10; w++ {
+		for y := 0; y < 10; y++ {
+			s = s + "a"
+		}
+		s = s + "," // want "concat-loop: string concatenation in a loop"
+	}
 }
 
 func negative() {

@@ -50,6 +50,7 @@ type perfSprint struct {
 	hexFormat  bool
 
 	fiximports bool
+	already    []*ast.AssignStmt
 }
 
 func newPerfSprint() *perfSprint {
@@ -61,6 +62,7 @@ func newPerfSprint() *perfSprint {
 		boolFormat: true,
 		hexFormat:  true,
 		fiximports: true,
+		already:    []*ast.AssignStmt{},
 	}
 }
 
@@ -207,6 +209,7 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 	var suffixSb203 strings.Builder
 	for _, k := range keys {
 		// lol
+		n.already = append(n.already, adds[k]...)
 		prefixSb203.WriteString(fmt.Sprintf("var %sSb%d strings.Builder\n", k, loopStartLine))
 		suffixSb203.WriteString(fmt.Sprintf("\n%s += %sSb%d.String()", k, k, loopStartLine))
 	}
@@ -259,6 +262,89 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 	)
 }
 
+func (n *perfSprint) processLoop(pass *analysis.Pass, bl []ast.Stmt) map[string][]*ast.AssignStmt {
+	// set of variable names declared inside the loop
+	declInLoop := make(map[string]bool)
+	adds := make(map[string][]*ast.AssignStmt)
+	for bs := 0; bs < len(bl); bs++ {
+		switch st := bl[bs].(type) {
+		case *ast.RangeStmt:
+			bl = append(bl, st.Body.List...)
+		case *ast.ForStmt:
+			bl = append(bl, st.Body.List...)
+		case *ast.IfStmt:
+			// explore breadth first, but go inside the if/else blocks
+			if st.Body != nil {
+				bl = append(bl, st.Body.List...)
+			}
+			el, ok := st.Else.(*ast.BlockStmt)
+			if ok && el != nil {
+				bl = append(bl, el.List...)
+			}
+		case *ast.DeclStmt:
+			// identifiers defined within loop do not count
+			de, ok := st.Decl.(*ast.GenDecl)
+			if !ok {
+				break
+			}
+			if len(de.Specs) != 1 {
+				break
+			}
+			// is it possible to have len(de.Specs) > 1 for ValueSpec ?
+			vs, ok := de.Specs[0].(*ast.ValueSpec)
+			if !ok {
+				break
+			}
+			for n := range vs.Names {
+				declInLoop[vs.Names[n].Name] = true
+			}
+		case *ast.AssignStmt:
+			for i := range st.Lhs {
+				id, ok := st.Lhs[i].(*ast.Ident)
+				if !ok {
+					break
+				}
+				switch st.Tok {
+				case token.DEFINE:
+					declInLoop[id.Name] = true
+				case token.ASSIGN, token.ADD_ASSIGN:
+					if i > 0 {
+						// do not search bugs for multi-assign
+						break
+					}
+					_, local := declInLoop[id.Name]
+					if local {
+						break
+					}
+					ti, ok := pass.TypesInfo.Types[id]
+					if !ok || ti.Type.String() != "string" {
+						break
+					}
+					if st.Tok == token.ASSIGN {
+						if isStringAdd(st, id.Name) == nil {
+							break
+						}
+					}
+					seen := false
+					for a := range n.already {
+						if n.already[a] == st {
+							seen = true
+							break
+						}
+					}
+					if seen {
+						break
+					}
+
+					// found a bad string concat in the loop
+					adds[id.Name] = append(adds[id.Name], st)
+				}
+			}
+		}
+	}
+	return adds
+}
+
 func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[string]map[string]struct{}) {
 	insp := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	// 2 different kinds of loops in go
@@ -267,8 +353,6 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 		(*ast.ForStmt)(nil),
 	}
 	insp.Preorder(nodeFilter, func(node ast.Node) {
-		// set of variable names declared insied the loop
-		declInLoop := make(map[string]bool)
 		var bl []ast.Stmt
 		// just take the list of instruction of the loop
 		switch ra := node.(type) {
@@ -280,68 +364,7 @@ func (n *perfSprint) runConcatLoop(pass *analysis.Pass, neededPackages map[strin
 		// set of results : mapping a variable name to a list of statements like `s +=`
 		// one loop may be bad for multiple string variables,
 		// each being concatenated in multiple statements
-		adds := make(map[string][]*ast.AssignStmt)
-		for bs := 0; bs < len(bl); bs++ {
-			switch st := bl[bs].(type) {
-			case *ast.IfStmt:
-				// explore breadth first, but go inside the if/else blocks
-				if st.Body != nil {
-					bl = append(bl, st.Body.List...)
-				}
-				el, ok := st.Else.(*ast.BlockStmt)
-				if ok && el != nil {
-					bl = append(bl, el.List...)
-				}
-			case *ast.DeclStmt:
-				// identifiers defined within loop do not count
-				de, ok := st.Decl.(*ast.GenDecl)
-				if !ok {
-					break
-				}
-				if len(de.Specs) != 1 {
-					break
-				}
-				// is it possible to have len(de.Specs) > 1 for ValueSpec ?
-				vs, ok := de.Specs[0].(*ast.ValueSpec)
-				if !ok {
-					break
-				}
-				for n := range vs.Names {
-					declInLoop[vs.Names[n].Name] = true
-				}
-			case *ast.AssignStmt:
-				for n := range st.Lhs {
-					id, ok := st.Lhs[n].(*ast.Ident)
-					if !ok {
-						break
-					}
-					switch st.Tok {
-					case token.DEFINE:
-						declInLoop[id.Name] = true
-					case token.ASSIGN, token.ADD_ASSIGN:
-						if n > 0 {
-							// do not search bugs for multi-assign
-							break
-						}
-						_, local := declInLoop[id.Name]
-						if local {
-							break
-						}
-						ti, ok := pass.TypesInfo.Types[id]
-						if !ok || ti.Type.String() != "string" {
-							break
-						}
-						if st.Tok == token.ASSIGN {
-							if isStringAdd(st, id.Name) == nil {
-								break
-							}
-						}
-						// found a bad string concat in the loop
-						adds[id.Name] = append(adds[id.Name], st)
-					}
-				}
-			}
-		}
+		adds := n.processLoop(pass, bl)
 		if len(adds) > 0 {
 			d := n.reportConcatLoop(pass, neededPackages, node, adds)
 			if d != nil {
