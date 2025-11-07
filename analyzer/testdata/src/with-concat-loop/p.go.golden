@@ -1,74 +1,85 @@
 package p
 
-import (
+import ( // want "fiximports: Fix imports"
+	"fmt"
 	"strings"
 )
 
-func positive() { // want "fiximports: Fix imports"
+func positive() {
 	var s string
 	words := []string{"one", "two", "three"}
-	var sSb6 strings.Builder
+	var sSb10 strings.Builder
 	for w := range words {
-		sSb6.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb10.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb6.String()
-	var sSb9 strings.Builder
+	s += sSb10.String()
+	var sSb13 strings.Builder
 	for w := range words {
-		sSb9.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
+		sSb13.WriteString(words[w]) // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb9.String()
-	var sSb12 strings.Builder
+	s += sSb13.String()
+	var sSb16 strings.Builder
 	for w := 0; w < 10; w++ {
-		sSb12.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		sSb16.WriteString("y") // want "concat-loop: string concatenation in a loop"
 	}
-	s += sSb12.String()
-	var sSb15 strings.Builder
+	s += sSb16.String()
+	var sSb19 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			sSb15.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb19.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s += sSb15.String()
+	s += sSb19.String()
 	nb := 0
-	var sSb21 strings.Builder
+	var sSb25 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
 			nb += 1
 		} else {
-			sSb21.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb25.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s += sSb21.String()
-	var sSb28 strings.Builder
+	s += sSb25.String()
+	var sSb32 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			sSb28.WriteString("x") // want "concat-loop: string concatenation in a loop"
+			sSb32.WriteString("x") // want "concat-loop: string concatenation in a loop"
 		} else {
-			sSb28.WriteString("y")
+			sSb32.WriteString("y")
 		}
 	}
-	s += sSb28.String()
+	s += sSb32.String()
 	s2 := "prefix"
-	var sSb36 strings.Builder
-	var s2Sb36 strings.Builder
+	var sSb40 strings.Builder
+	var s2Sb40 strings.Builder
 	for w := 0; w < 10; w++ {
 		if w%2 == 1 {
-			s2Sb36.WriteString("x")
+			s2Sb40.WriteString("x")
 		} else {
-			sSb36.WriteString("y") // want "concat-loop: string concatenation in a loop"
+			sSb40.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		}
 	}
-	s += sSb36.String()
-	s2 += s2Sb36.String()
+	s += sSb40.String()
+	s2 += s2Sb40.String()
 	// FIXME check usages of string identifier s (and mayber others) in loop
-	var sSb43 strings.Builder
+	var sSb47 strings.Builder
 	for w := 0; w < 10; w++ {
-		sSb43.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		sSb47.WriteString("y") // want "concat-loop: string concatenation in a loop"
 		if len(s)%3 == 1 {
-			sSb43.WriteString(",")
+			sSb47.WriteString(",")
 		}
 	}
-	s += sSb43.String()
+	s += sSb47.String()
+
+	// FIXME check usages of string identifier s (and mayber others) in loop
+	var sSb54 strings.Builder
+	for w := 0; w < 10; w++ {
+		s = fmt.Sprintf("%s+%s", s, "y")
+		if w%2 == 1 {
+			sSb54.WriteString(",") // want "concat-loop: string concatenation in a loop"
+		}
+	}
+	s += sSb54.String()
 }
 
 func negative() {

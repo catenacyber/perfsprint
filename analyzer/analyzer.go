@@ -173,6 +173,9 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 				if ok {
 					_, ok = adds[id.Name]
 					if ok {
+						if x.Tok == token.ASSIGN && isStringAdd(x, id.Name) == nil {
+							addTODO = id.Name
+						}
 						return false
 					}
 				}
