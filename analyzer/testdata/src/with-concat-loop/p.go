@@ -1,6 +1,10 @@
 package p
 
-func positive() { // want "fiximports: Fix imports"
+import ( // want "fiximports: Fix imports"
+	"fmt"
+)
+
+func positive() {
 	var s string
 	words := []string{"one", "two", "three"}
 	for w := range words {
@@ -44,6 +48,13 @@ func positive() { // want "fiximports: Fix imports"
 		s = s + "y" // want "concat-loop: string concatenation in a loop"
 		if len(s)%3 == 1 {
 			s = s + ","
+		}
+	}
+
+	for w := 0; w < 10; w++ {
+		s = fmt.Sprintf("%s+%s", s, "y")
+		if w%2 == 1 {
+			s = s + "," // want "concat-loop: string concatenation in a loop"
 		}
 	}
 }
