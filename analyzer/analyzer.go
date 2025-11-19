@@ -272,6 +272,14 @@ func (n *perfSprint) processLoop(pass *analysis.Pass, bl []ast.Stmt) map[string]
 			bl = append(bl, st.Body.List...)
 		case *ast.ForStmt:
 			bl = append(bl, st.Body.List...)
+		case *ast.SwitchStmt:
+			if st.Body != nil {
+				bl = append(bl, st.Body.List...)
+			}
+		case *ast.CaseClause:
+			if st.Body != nil {
+				bl = append(bl, st.Body...)
+			}
 		case *ast.IfStmt:
 			// explore breadth first, but go inside the if/else blocks
 			if st.Body != nil {

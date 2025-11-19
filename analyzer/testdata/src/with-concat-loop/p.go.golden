@@ -89,6 +89,17 @@ func positive() {
 		sSb61.WriteString(",") // want "concat-loop: string concatenation in a loop"
 	}
 	s += sSb61.String()
+
+	var sSb68 strings.Builder
+	for w := 0; w < 10; w++ {
+		switch w {
+		case 1:
+		// do something
+		default:
+			sSb68.WriteString("y") // want "concat-loop: string concatenation in a loop"
+		}
+	}
+	s += sSb68.String()
 }
 
 func negative() {
