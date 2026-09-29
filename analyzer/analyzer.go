@@ -56,7 +56,7 @@ type perfSprint struct {
 func newPerfSprint() *perfSprint {
 	return &perfSprint{
 		intFormat:  optionInt{enabled: true, intConv: true},
-		errFormat:  optionErr{enabled: true, errError: false, errorf: true},
+		errFormat:  optionErr{enabled: true, errError: false, errorf: false},
 		strFormat:  optionStr{enabled: true, sprintf1: true, strconcat: true},
 		concatLoop: optionConcatLoop{enabled: true, otherOps: false},
 		boolFormat: true,
