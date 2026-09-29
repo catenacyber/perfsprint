@@ -22,7 +22,7 @@ func positive() {
 	fmt.Sprintf("%[1]s", s)
 	fmt.Sprintf("%v", s)
 	fmt.Sprint(s)
-	fmt.Errorf("hello") // want "error-format: fmt.Errorf can be replaced with errors.New"
+	fmt.Errorf("hello")
 
 	fmt.Sprintf("Hello %s", s)
 	fmt.Sprintf("%s says Hello", s)
