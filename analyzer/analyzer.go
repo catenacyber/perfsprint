@@ -210,8 +210,8 @@ func (n *perfSprint) reportConcatLoop(pass *analysis.Pass, neededPackages map[st
 	for _, k := range keys {
 		// lol
 		n.already = append(n.already, adds[k]...)
-		prefixSb203.WriteString(fmt.Sprintf("var %sSb%d strings.Builder\n", k, loopStartLine))
-		suffixSb203.WriteString(fmt.Sprintf("\n%s += %sSb%d.String()", k, k, loopStartLine))
+		fmt.Fprintf(&prefixSb203, "var %sSb%d strings.Builder\n", k, loopStartLine)
+		fmt.Fprintf(&suffixSb203, "\n%s += %sSb%d.String()", k, k, loopStartLine)
 	}
 	prefix += prefixSb203.String()
 	suffix += suffixSb203.String()
